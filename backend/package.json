@@ -1,0 +1,27 @@
+{
+  "name": "nexuscart-ai",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+   "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hardeep-Malhotra/fullstack-mern-ecommerce.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Hardeep-Malhotra/fullstack-mern-ecommerce/issues"
+  },
+  "homepage": "https://github.com/Hardeep-Malhotra/fullstack-mern-ecommerce#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14"
+  }
+}
