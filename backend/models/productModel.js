@@ -1,81 +1,107 @@
 import mongoose from "mongoose";
 
-const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Please Enter Product Name"],
-    trim: true,
-  },
-  description: {
-    type: String,
-    required: [true, "Please Enter Product Description"],
-  },
-  price: {
-    type: Number,
-    required: [true, "Please Enter Product Price"],
-    max: [9999999, "Price cannot exceed 7 digits"],
-  },
-  ratings: {
-    type: Number,
-    default: 0,
-  },
-  images: [
-    {
-      public_id: {
-        type: String,
-        required: true,
-      },
-      url: {
-        type: String,
-        required: true,
-      },
+const reviewSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-  ],
-  category: {
-    type: String,
-    required: [true, "Please Enter Product Category"],
-  },
-  stock: {
-    type: Number,
-    required: [true, "Please Enter Product Stock"], 
-    max: [99999, "Stock cannot exceed 5 digits"],
-    default: 1,
-  },
-  numberOfReviews: {
-    type: Number,
-    default: 0,
-  },
-  reviews: [
-    {
-      user: {
-        type: mongoose.Schema.ObjectId,
-        ref: "User",
-        required: true,
-      },
-      name: {
-        type: String,
-        required: true,
-      },
-      ratings: {
-        type: Number,
-        required: true,
-      },
-      comment: {
-        type: String,
-        required: true,
-      },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-  ],
-  // Product kis Admin ne create kiya uski ID
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: "User",
-    required: false, 
+    rating: {
+      type: Number,
+      required: true,
+      min: [1, "Rating must be at least 1"],
+      max: [5, "Rating cannot exceed 5"],
+    },
+    comment: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  { _id: false },
+);
+
+const productSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Please Enter Product Name"],
+      trim: true,
+      minlength: [3, "Product name must be at least 3 characters"],
+      maxlength: [100, "Product name cannot exceed 100 characters"],
+    },
+
+    description: {
+      type: String,
+      required: [true, "Please Enter Product Description"],
+      trim: true,
+    },
+
+    price: {
+      type: Number,
+      required: [true, "Please Enter Product Price"],
+      min: [0, "Price cannot be negative"],
+      max: [9999999, "Price cannot exceed 7 digits"],
+    },
+
+    category: {
+      type: String,
+      required: [true, "Please Enter Product Category"],
+      trim: true,
+    },
+
+    stock: {
+      type: Number,
+      required: [true, "Please Enter Product Stock"],
+      min: [0, "Stock cannot be negative"],
+      max: [99999, "Stock cannot exceed 5 digits"],
+      default: 1,
+    },
+
+    ratings: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+
+    numberOfReviews: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    images: [
+      {
+        public_id: {
+          type: String,
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+
+    reviews: [reviewSchema],
+
+    // Admin jisne product create kiya
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
   },
-});
+  {
+    timestamps: true,
+  },
+);
 
 export default mongoose.model("Product", productSchema);
