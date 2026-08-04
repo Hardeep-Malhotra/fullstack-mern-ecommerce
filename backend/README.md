@@ -494,9 +494,362 @@ JSON Error Response
 * Payment Integration
 
 ---
+# 🛒 NexusCart-AI Backend
 
-## 👨‍💻 Author
+A production-ready MERN E-Commerce backend built using **Node.js**, **Express.js**, and **MongoDB**, following clean architecture and scalable backend development practices.
 
-**Hardeep Singh**
+---
 
-Building **NexusCart-AI** as a production-ready MERN E-Commerce backend for learning, portfolio, and placements.
+# 🚀 Tech Stack
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* Joi Validation
+* Dotenv
+
+---
+
+# 📁 Project Structure
+
+```text
+backend/
+│
+├── config/
+│   ├── config.env
+│   └── db.js
+│
+├── controllers/
+│   ├── createProductController.js
+│   ├── getAllProductsController.js
+│   └── getSingleProductController.js
+│
+├── middlewares/
+│   ├── asyncHandler.js
+│   ├── error.js
+│   └── validate.js
+│
+├── models/
+│   └── productModel.js
+│
+├── routes/
+│   └── productRoutes.js
+│
+├── utils/
+│   ├── ErrorHandler.js
+│   └── apiFunctionality.js
+│
+├── validators/
+│   └── productValidator.js
+│
+├── app.js
+├── server.js
+└── package.json
+```
+
+---
+
+# ✅ Features Implemented
+
+## 1. Express Server Setup
+
+* Express Application
+* Environment Variables
+* MongoDB Connection
+* API Routing
+
+---
+
+## 2. Product Model
+
+Designed a production-ready Product schema with:
+
+* Product Name
+* Description
+* Price
+* Category
+* Stock
+* Ratings
+* Number of Reviews
+* Images
+* Embedded Review Schema
+* User Reference
+* Automatic Timestamps
+
+---
+
+## 3. Embedded Review Schema
+
+Created a reusable Review Schema inside the Product model.
+
+Each review stores:
+
+* User
+* Name
+* Rating
+* Comment
+
+---
+
+## 4. Joi Validation
+
+Implemented reusable request validation.
+
+Validated fields:
+
+* Product Name
+* Description
+* Price
+* Category
+* Stock
+
+---
+
+## 5. Validation Middleware
+
+Created a reusable middleware that:
+
+* Validates request body
+* Returns HTTP 400 on invalid data
+* Prevents invalid requests from reaching controllers
+* Returns all validation errors together
+
+---
+
+## 6. Async Handler
+
+Implemented reusable async wrapper for Express controllers.
+
+Benefits:
+
+* Removes repetitive try-catch blocks
+* Automatically forwards rejected promises to the global error handler
+* Keeps controllers clean and readable
+
+---
+
+## 7. Global Error Handling
+
+Implemented centralized error handling using:
+
+* Custom ErrorHandler Class
+* Global Error Middleware
+
+Provides consistent JSON error responses across the application.
+
+---
+
+# 📦 Product APIs
+
+## Create Product
+
+```http
+POST /api/v1/products
+```
+
+Creates a new product after validating the request.
+
+---
+
+## Get All Products
+
+```http
+GET /api/v1/products
+```
+
+Returns all products from the database.
+
+Supports:
+
+* Search
+* Filter
+* Sort
+* Pagination
+
+---
+
+## Get Single Product
+
+```http
+GET /api/v1/product/:id
+```
+
+Returns product details using Product ID.
+
+Returns **404** if the product does not exist.
+
+---
+
+# 🔍 API Features
+
+A reusable `APIFunctionality` class has been implemented to keep controllers clean and scalable.
+
+---
+
+## Search
+
+Supports keyword search using MongoDB Regular Expressions.
+
+Example:
+
+```http
+GET /api/v1/products?keyword=iphone
+```
+
+Searches product names in a case-insensitive manner.
+
+---
+
+## Filter
+
+Supports advanced filtering.
+
+Examples:
+
+```http
+GET /api/v1/products?category=Mobiles
+```
+
+```http
+GET /api/v1/products?price[gte]=50000
+```
+
+```http
+GET /api/v1/products?price[lte]=100000
+```
+
+```http
+GET /api/v1/products?ratings[gte]=4
+```
+
+---
+
+## Sort
+
+Supports dynamic sorting.
+
+Examples:
+
+```http
+GET /api/v1/products?sort=price
+```
+
+```http
+GET /api/v1/products?sort=-price
+```
+
+```http
+GET /api/v1/products?sort=ratings
+```
+
+Default sorting:
+
+```text
+Newest Products First
+```
+
+---
+
+## Pagination
+
+Supports paginated responses.
+
+Example:
+
+```http
+GET /api/v1/products?page=2
+```
+
+Returns:
+
+* Current Page
+* Total Pages
+* Products Per Page
+* Total Filtered Products
+
+---
+
+# 🔄 Request Flow
+
+```text
+Client
+   │
+   ▼
+Express Route
+   │
+   ▼
+Validation Middleware
+   │
+   ▼
+Controller
+   │
+   ▼
+API Functionality
+(Search → Filter → Sort → Pagination)
+   │
+   ▼
+MongoDB
+   │
+   ▼
+JSON Response
+```
+
+---
+
+# ⚠ Error Flow
+
+```text
+Controller
+   │
+   ▼
+Async Handler
+   │
+   ▼
+Global Error Middleware
+   │
+   ▼
+JSON Error Response
+```
+
+---
+
+# 🚧 Upcoming Features
+
+* Update Product API
+* Delete Product API
+* Multer Integration
+* Cloudinary Image Upload
+* JWT Authentication
+* Role-Based Authorization
+* User Module
+* Product Reviews API
+* Cart Module
+* Wishlist Module
+* Order Management
+* Payment Gateway Integration
+
+---
+
+# 🎯 Learning Outcomes
+
+Through this module, the following backend concepts have been implemented and understood:
+
+* REST API Design
+* CRUD Operations
+* Express Routing
+* Middleware Architecture
+* MongoDB & Mongoose
+* Schema Design
+* Embedded Documents
+* Joi Validation
+* Global Error Handling
+* Async Controller Pattern
+* Search using Regex
+* Dynamic Filtering
+* Sorting
+* Pagination
+* Reusable Utility Classes
+* Clean Backend Architecture
+
+---
