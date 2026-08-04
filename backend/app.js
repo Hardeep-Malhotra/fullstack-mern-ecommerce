@@ -1,10 +1,14 @@
-import express  from "express";
-import product from "./routes/productRoutes.js";
+import express from "express";
+import productRoutes from "./routes/productRoutes.js";
+import errorMiddleware from "./middlewares/error.js";
+
 const app = express();
 
-//Middlewares
 app.use(express.json());
 
-// Route
-app.use("/api/v1",product)
-export default  app;
+app.use("/api/v1", productRoutes);
+
+// Error Middleware (Always Last)
+app.use(errorMiddleware);
+
+export default app;
