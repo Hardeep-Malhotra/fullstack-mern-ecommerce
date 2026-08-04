@@ -270,3 +270,233 @@ Build a production-ready MERN E-Commerce backend following clean architecture, s
 **Hardeep Singh**
 
 Building **NexusCart-AI** as a placement-ready and production-grade MERN E-Commerce project.
+
+---
+# 🛒 NexusCart-AI Backend
+
+A production-ready MERN E-Commerce backend built with **Node.js**, **Express.js**, and **MongoDB**, following clean architecture and scalable development practices.
+
+---
+
+## 🚀 Tech Stack
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* Joi Validation
+* Dotenv
+
+---
+
+# 📁 Project Structure
+
+```text
+backend/
+│
+├── config/
+│   ├── config.env
+│   └── db.js
+│
+├── controllers/
+│   ├── createProductController.js
+│   ├── getAllProductsController.js
+│   └── getSingleProductController.js
+│
+├── middlewares/
+│   ├── asyncHandler.js
+│   ├── error.js
+│   └── validate.js
+│
+├── models/
+│   └── productModel.js
+│
+├── routes/
+│   └── productRoutes.js
+│
+├── utils/
+│   └── ErrorHandler.js
+│
+├── validators/
+│   └── productValidator.js
+│
+├── app.js
+├── server.js
+└── package.json
+```
+
+---
+
+# ✅ Features Completed
+
+## Server Setup
+
+* Express Server
+* Environment Variables
+* MongoDB Connection
+* API Routing
+
+---
+
+## Product Model
+
+Implemented a production-ready Product model with:
+
+* Product Name
+* Description
+* Price
+* Category
+* Stock
+* Ratings
+* Number of Reviews
+* Images
+* Embedded Review Schema
+* Admin/User Reference
+* Automatic Timestamps
+
+---
+
+## Joi Validation
+
+Created reusable validation for Product APIs.
+
+Validated Fields:
+
+* Name
+* Description
+* Price
+* Category
+* Stock
+
+---
+
+## Validation Middleware
+
+Reusable middleware that:
+
+* Validates request body
+* Returns HTTP 400 for invalid requests
+* Returns all validation errors together
+* Prevents invalid data from reaching controllers
+
+---
+
+## Async Handler
+
+Implemented reusable async wrapper for controllers.
+
+Benefits:
+
+* Removes repetitive try-catch blocks
+* Automatically forwards errors to Express error middleware
+* Cleaner controller code
+
+---
+
+## Global Error Handler
+
+Implemented centralized error middleware for consistent API error responses.
+
+---
+
+## Custom Error Handler
+
+Created reusable ErrorHandler class for custom application errors and status codes.
+
+---
+
+# Product APIs Completed
+
+### Create Product
+
+```http
+POST /api/v1/products
+```
+
+Creates a new product after successful validation.
+
+---
+
+### Get All Products
+
+```http
+GET /api/v1/products
+```
+
+Returns all available products.
+
+---
+
+### Get Single Product
+
+```http
+GET /api/v1/product/:id
+```
+
+Returns a single product by its ID.
+
+Returns **404** if the product does not exist.
+
+---
+
+# Current Backend Flow
+
+```text
+Client
+   │
+   ▼
+Routes
+   │
+   ▼
+Validation Middleware
+   │
+   ▼
+Controller
+   │
+   ▼
+MongoDB
+   │
+   ▼
+JSON Response
+```
+
+Error Flow
+
+```text
+Controller
+   │
+   ▼
+Async Handler
+   │
+   ▼
+Error Middleware
+   │
+   ▼
+JSON Error Response
+```
+
+---
+
+# 🚧 Upcoming Features
+
+* Update Product API
+* Delete Product API
+* Multer Integration
+* Cloudinary Image Upload
+* JWT Authentication
+* Role-Based Authorization
+* Search
+* Filter
+* Pagination
+* Sorting
+* Product Reviews
+* Order Management
+* Payment Integration
+
+---
+
+## 👨‍💻 Author
+
+**Hardeep Singh**
+
+Building **NexusCart-AI** as a production-ready MERN E-Commerce backend for learning, portfolio, and placements.
