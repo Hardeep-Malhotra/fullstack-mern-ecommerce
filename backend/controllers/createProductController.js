@@ -1,10 +1,17 @@
 import Product from "../models/productModel.js";
+import asyncHandler from "../middlewares/asyncHandler.js";
 
+export const createProducts = asyncHandler(async (req, res) => {
 
-export const createProducts = async (req , res) =>{
-    res.status(200).json({
-        success:true,
-        message:"Product Successfully created",
-        data:req.body
-    })
-};
+    // Future
+    // req.body.user = req.user._id;
+
+    const product = await Product.create(req.body);
+
+    res.status(201).json({
+        success: true,
+        message: "Product created successfully",
+        product,
+    });
+
+});

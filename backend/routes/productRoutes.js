@@ -1,22 +1,28 @@
 import express from "express";
 
-// Validator
+// Middlewares & Validators
 import { validateBody } from "../middlewares/validate.js";
 import { createProductSchema } from "../validators/productValidator.js";
+import { updateProductSchema } from "../validators/updateProductValidator.js"; // <-- Import Here
 
-import { getProducts } from "../controllers/getProductsController.js";
+// Controllers
+import { getAllProducts } from "../controllers/getAllProductsController.js";
 import { getSingleProduct } from "../controllers/getSingleProductController.js";
 import { createProducts } from "../controllers/createProductController.js";
+import { deleteProduct } from "../controllers/deleteProductController.js";
+import { updateProduct } from "../controllers/updateProductController.js";
 
 const router = express.Router();
 
-// Get all products -> /api/v1/products
 router
   .route("/products")
-  .get(getProducts)
+  .get(getAllProducts)
   .post(validateBody(createProductSchema), createProducts);
 
-// Get single product -> /api/v1/product/:id (ya jo bhi parameter ho)
-// router.route("/product/:id").get(getSingleProduct);
+router
+  .route("/products/:id")
+  .get(getSingleProduct)
+  .put(validateBody(updateProductSchema), updateProduct) 
+  .delete(deleteProduct);
 
 export default router;
