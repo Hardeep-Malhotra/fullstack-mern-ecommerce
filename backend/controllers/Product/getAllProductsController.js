@@ -1,7 +1,7 @@
-import Product from "../models/productModel.js";
-import asyncHandler from "../middlewares/asyncHandler.js";
-import ErrorHandler from "../utils/ErrorHandler.js";
-import APIFunctionality from "../utils/apiFunctionality.js";
+import Product from "../../models/productModel.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
+import ErrorHandler from "../../utils/ErrorHandler.js";
+import APIFunctionality from "../../utils/apiFunctionality.js";
 
 export const getAllProducts = asyncHandler(async (req, res, next) => {
   const resultsPerPage = 2; // Production me 8 ya 12 rakh sakte ho
