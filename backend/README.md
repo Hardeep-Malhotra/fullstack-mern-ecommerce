@@ -25,42 +25,6 @@ The goal of this project is to build an industry-standard backend by following b
 
 ---
 
-# 📁 Project Structure
-
-```text
-backend/
-│
-├── config/
-│   ├── config.env
-│   └── db.js
-│
-├── controllers/
-│   └── createProductController.js
-│
-├── middlewares/
-│   ├── asyncHandler.js
-│   ├── error.js
-│   └── validate.js
-│
-├── models/
-│   └── productModel.js
-│
-├── routes/
-│   └── productRoutes.js
-│
-├── utils/
-│   └── ErrorHandler.js
-│
-├── validators/
-│   └── productValidator.js
-│
-├── app.js
-├── server.js
-└── package.json
-```
-
----
-
 # ✅ Features Completed
 
 ## ✔ Express Server Setup
@@ -264,14 +228,6 @@ JSON Error Response
 Build a production-ready MERN E-Commerce backend following clean architecture, scalable design, and industry best practices.
 
 ---
-
-## 👨‍💻 Author
-
-**Hardeep Singh**
-
-Building **NexusCart-AI** as a placement-ready and production-grade MERN E-Commerce project.
-
----
 # 🛒 NexusCart-AI Backend
 
 A production-ready MERN E-Commerce backend built with **Node.js**, **Express.js**, and **MongoDB**, following clean architecture and scalable development practices.
@@ -289,41 +245,6 @@ A production-ready MERN E-Commerce backend built with **Node.js**, **Express.js*
 
 ---
 
-# 📁 Project Structure
-
-```text
-backend/
-│
-├── config/
-│   ├── config.env
-│   └── db.js
-│
-├── controllers/
-│   ├── createProductController.js
-│   ├── getAllProductsController.js
-│   └── getSingleProductController.js
-│
-├── middlewares/
-│   ├── asyncHandler.js
-│   ├── error.js
-│   └── validate.js
-│
-├── models/
-│   └── productModel.js
-│
-├── routes/
-│   └── productRoutes.js
-│
-├── utils/
-│   └── ErrorHandler.js
-│
-├── validators/
-│   └── productValidator.js
-│
-├── app.js
-├── server.js
-└── package.json
-```
 
 ---
 
@@ -509,44 +430,6 @@ A production-ready MERN E-Commerce backend built using **Node.js**, **Express.js
 * Joi Validation
 * Dotenv
 
----
-
-# 📁 Project Structure
-
-```text
-backend/
-│
-├── config/
-│   ├── config.env
-│   └── db.js
-│
-├── controllers/
-│   ├── createProductController.js
-│   ├── getAllProductsController.js
-│   └── getSingleProductController.js
-│
-├── middlewares/
-│   ├── asyncHandler.js
-│   ├── error.js
-│   └── validate.js
-│
-├── models/
-│   └── productModel.js
-│
-├── routes/
-│   └── productRoutes.js
-│
-├── utils/
-│   ├── ErrorHandler.js
-│   └── apiFunctionality.js
-│
-├── validators/
-│   └── productValidator.js
-│
-├── app.js
-├── server.js
-└── package.json
-```
 
 ---
 
@@ -851,5 +734,199 @@ Through this module, the following backend concepts have been implemented and un
 * Pagination
 * Reusable Utility Classes
 * Clean Backend Architecture
+
+---
+# 🔐 NexusCart AI - Authentication Module
+
+A production-ready authentication system built using **Node.js**, **Express.js**, **MongoDB**, **JWT**, **Passport.js**, and **Google OAuth 2.0**.
+
+This module is designed with scalability and security in mind, following industry-standard authentication practices.
+
+---
+
+## 🚀 Features
+
+### ✅ User Authentication
+
+* User Registration
+* User Login
+* Secure Password Hashing using **bcryptjs**
+* JWT Token Generation
+* HttpOnly Cookie Authentication
+* Protected Routes Ready
+* Google OAuth 2.0 Login (Passport.js)
+
+---
+
+## 🔒 Security Features
+
+* Password Hashing with bcryptjs
+* JWT Authentication
+* HttpOnly Cookies
+* Secure Cookie Support (Production)
+* SameSite Cookie Protection
+* Email Validation
+* Environment Variables for Secrets
+* Production Ready Authentication Flow
+
+---
+
+## 🌐 Google OAuth Features
+
+* Sign in with Google
+* Automatic User Registration
+* Existing User Login
+* Account Linking using Email
+* Google Profile Picture Support
+* Verified Google Email Support
+* Google ID Storage
+* Provider Tracking
+
+---
+
+## 🛠️ Tech Stack
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* Passport.js
+* Passport Google OAuth 2.0
+* JWT (jsonwebtoken)
+* bcryptjs
+* Validator
+* dotenv
+
+---
+
+
+---
+
+## ⚙️ Authentication Flow
+
+### Email & Password Authentication
+
+```text
+User Register
+      │
+      ▼
+Validate Input
+      │
+      ▼
+Hash Password
+      │
+      ▼
+Store User in MongoDB
+      │
+      ▼
+Generate JWT
+      │
+      ▼
+Send HttpOnly Cookie
+      │
+      ▼
+User Logged In
+```
+
+---
+
+### Google OAuth Flow
+
+```text
+User
+      │
+      ▼
+Continue with Google
+      │
+      ▼
+Google Authentication
+      │
+      ▼
+Passport Google Strategy
+      │
+      ▼
+Check Existing User
+      │
+      ├── User Exists
+      │       │
+      │       ▼
+      │    Login
+      │
+      └── New User
+              │
+              ▼
+      Create Account
+              │
+              ▼
+        Generate JWT
+              │
+              ▼
+     Send HttpOnly Cookie
+```
+
+---
+
+## 📦 Environment Variables
+
+```env
+PORT=8000
+
+MONGO_URI=your_mongodb_connection
+
+JWT_SECRET=your_super_secret_key
+JWT_EXPIRE=7d
+
+COOKIE_EXPIRE=7
+
+NODE_ENV=development
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:8000/api/v1/auth/google/callback
+```
+
+---
+
+## 📡 API Endpoints
+
+### Authentication
+
+| Method | Endpoint                       | Description           |
+| ------ | ------------------------------ | --------------------- |
+| POST   | `/api/v1/auth/register`        | Register New User     |
+| POST   | `/api/v1/auth/login`           | Login User            |
+| GET    | `/api/v1/auth/google`          | Google Login          |
+| GET    | `/api/v1/auth/google/callback` | Google OAuth Callback |
+
+---
+
+## ✨ Highlights
+
+* Production-ready authentication architecture
+* JWT-based authentication
+* Google OAuth integration
+* Secure password hashing
+* Account linking support
+* HttpOnly cookie authentication
+* Clean project structure
+* Reusable token utility
+* Environment-based configuration
+* Industry-standard security practices
+
+---
+
+## 🚧 Upcoming Features
+
+* Logout
+* Forgot Password
+* Reset Password
+* Email Verification
+* Update Profile
+* Change Password
+* Role-Based Authorization (Admin/User)
+* Refresh Token Authentication
+* Redis Session Management
+* Two-Factor Authentication (2FA)
+* AI-Powered Security Features
 
 ---
