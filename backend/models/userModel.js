@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import validator from "validator";
-
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -65,5 +66,27 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// 1. Password Hashing (Pre-save Hook)
+userSchema.pre("save", async function () {
+  // 1. Agar password modify nahi hua ya missing hai, skip hashing
+  if (!this.isModified("password") || !this.password) {
+    return; // Direct return karein, next() ki zarurat nahi hai
+  }
+
+  // 2. Password Hash karein
+  this.password = await bcrypt.hash(this.password, 10);
+});
+// 2. JWT Token Generation Method
+userSchema.methods.getJWTToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE || "7d",
+  });
+};
+
+// 3. Compare Password Method (Login ke liye)
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 export default mongoose.model("User", userSchema);
