@@ -6,11 +6,11 @@ import { createProductSchema } from "../validators/productValidator.js";
 import { updateProductSchema } from "../validators/updateProductValidator.js"; // <-- Import Here
 
 // Controllers
-import { getAllProducts } from "../controllers/Product/getAllProductsController.js";
-import { getSingleProduct } from "../controllers/Product/getSingleProductController.js";
-import { createProducts } from "../controllers/Product/createProductController.js";
-import { deleteProduct } from "../controllers/Product/deleteProductController.js";
-import { updateProduct } from "../controllers/Product/updateProductController.js";
+import { getAllProducts } from "../controllers/productController/getAllProductsController.js";
+import { getSingleProduct } from "../controllers/productController/getSingleProductController.js";
+import { createProducts } from "../controllers/productController/createProductController.js";
+import { deleteProduct } from "../controllers/productController/deleteProductController.js";
+import { updateProduct } from "../controllers/productController/updateProductController.js";
 
 const router = express.Router();
 
