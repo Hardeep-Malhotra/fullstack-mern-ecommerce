@@ -26,3 +26,4 @@ export const registerUser = asyncHandler(async (req, res, next) => {
 
   sendToken(user, 201, res);
 });
+
