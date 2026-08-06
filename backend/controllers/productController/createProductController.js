@@ -4,7 +4,7 @@ import asyncHandler from "../../middlewares/asyncHandler.js";
 export const createProducts = asyncHandler(async (req, res) => {
 
     // Future
-    // req.body.user = req.user._id;
+    req.body.user = req.user._id;
 
     const product = await Product.create(req.body);
 

@@ -5,7 +5,7 @@ import ErrorHandler from "../../utils/errorHandler.js"; // 1. Import your ErrorH
 
 // ================= USER REGISTER CONTROLLER =================
 export const registerUser = asyncHandler(async (req, res, next) => {
-  const { name, email, password, avatar } = req.body;
+  const { name, email, password, avatar , role } = req.body;
 
   // Check if user already exists
   const existingUser = await User.findOne({ email });
@@ -16,13 +16,14 @@ export const registerUser = asyncHandler(async (req, res, next) => {
   }
 
   // Create user
-  const user = await User.create({
-    name,
-    email,
-    password,
-    avatar,
-    provider: "local",
-  });
+ const user = await User.create({
+  name,
+  email,
+  password,
+  avatar,
+  role,
+  provider: "local",
+});
 
   sendToken(user, 201, res);
 });

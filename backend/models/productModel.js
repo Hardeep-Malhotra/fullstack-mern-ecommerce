@@ -92,11 +92,10 @@ const productSchema = new mongoose.Schema(
 
     reviews: [reviewSchema],
 
-    // Admin jisne product create kiya
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false,
+      required: [true, "Product creator user ID is required"],
     },
   },
   {
