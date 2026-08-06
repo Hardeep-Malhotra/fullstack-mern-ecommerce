@@ -930,3 +930,318 @@ GOOGLE_CALLBACK_URL=http://localhost:8000/api/v1/auth/google/callback
 * AI-Powered Security Features
 
 ---
+# 🔐 NexusCart AI - Authentication Module
+
+A production-ready authentication system built with **Node.js**, **Express.js**, **MongoDB**, **JWT**, **Passport.js**, and **Google OAuth 2.0**.
+
+This module follows modern authentication practices and is designed with security, scalability, and maintainability in mind.
+
+---
+
+# ✨ Features
+
+## 👤 User Authentication
+
+* User Registration
+* User Login
+* Secure Password Hashing using **bcryptjs**
+* JWT Authentication
+* HttpOnly Cookie Authentication
+* Protected Routes
+* Logout Ready
+
+---
+
+## 🌍 Google OAuth 2.0 Authentication
+
+* Continue with Google
+* Automatic Google Account Registration
+* Google Login
+* Existing Account Linking
+* Google Profile Image Support
+* Google Email Verification
+* Google ID Storage
+* OAuth Provider Tracking
+
+---
+
+## 🔐 Password Security
+
+* Password Hashing using bcrypt
+* Password Comparison Method
+* Secure JWT Token Generation
+* HttpOnly Cookies
+* SameSite Cookie Protection
+* Secure Cookies in Production
+* Environment Variable Based Secrets
+
+---
+
+## 🔑 Forgot Password & Reset Password
+
+* Forgot Password API
+* Secure Reset Token Generation
+* SHA-256 Token Hashing
+* 15 Minute Token Expiry
+* Password Reset Email
+* One-Time Reset Token
+* Automatic Token Cleanup
+* Automatic Login After Password Reset
+
+---
+
+## 📧 Email Service
+
+* Nodemailer Integration
+* Gmail SMTP Support
+* Dynamic Email Sender
+* Plain Text Email Support
+* HTML Email Ready
+* Reusable Email Utility
+
+---
+
+# 🛠️ Tech Stack
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* Passport.js
+* Passport Google OAuth 2.0
+* JWT (jsonwebtoken)
+* bcryptjs
+* Validator
+* Nodemailer
+* Crypto
+* dotenv
+
+---
+
+# 🔄 Authentication Flow
+
+## Email & Password Login
+
+```text
+User
+   │
+   ▼
+Register
+   │
+   ▼
+Validate Data
+   │
+   ▼
+Hash Password
+   │
+   ▼
+Save User
+   │
+   ▼
+Generate JWT
+   │
+   ▼
+HttpOnly Cookie
+   │
+   ▼
+Authenticated
+```
+
+---
+
+## Google OAuth Flow
+
+```text
+User
+   │
+   ▼
+Continue with Google
+   │
+   ▼
+Google Authentication
+   │
+   ▼
+Passport Google Strategy
+   │
+   ▼
+Find Existing User
+   │
+   ├───────────────┐
+   ▼               ▼
+User Exists     New User
+   │               │
+   ▼               ▼
+ Login       Create Account
+        │
+        ▼
+Generate JWT
+        │
+        ▼
+HttpOnly Cookie
+        │
+        ▼
+Authenticated
+```
+
+---
+
+## Forgot Password Flow
+
+```text
+User
+   │
+   ▼
+Forgot Password
+   │
+   ▼
+Find User
+   │
+   ▼
+Generate Reset Token
+   │
+   ▼
+Hash Token
+   │
+   ▼
+Save Token in Database
+   │
+   ▼
+Send Reset Email
+   │
+   ▼
+User Receives Email
+```
+
+---
+
+## Reset Password Flow
+
+```text
+User Opens Email
+        │
+        ▼
+Reset Link
+        │
+        ▼
+Verify Reset Token
+        │
+        ▼
+Check Expiry
+        │
+        ▼
+Update Password
+        │
+        ▼
+Hash Password
+        │
+        ▼
+Delete Reset Token
+        │
+        ▼
+Generate JWT
+        │
+        ▼
+Login Successfully
+```
+
+---
+
+# 📦 Environment Variables
+
+```env
+PORT=8000
+
+NODE_ENV=development
+
+MONGO_URI=your_mongodb_connection_string
+
+JWT_SECRET=your_super_secret_key
+JWT_EXPIRE=7d
+COOKIE_EXPIRE=7
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:8000/api/v1/auth/google/callback
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SERVICE=gmail
+
+SMTP_MAIL=your_email@gmail.com
+SMTP_PASSWORD=your_google_app_password
+
+SMTP_FROM_NAME=NexusCart AI
+```
+
+---
+
+# 📡 Authentication APIs
+
+| Method | Endpoint                             | Description           |
+| ------ | ------------------------------------ | --------------------- |
+| POST   | `/api/v1/auth/register`              | Register User         |
+| POST   | `/api/v1/auth/login`                 | Login User            |
+| GET    | `/api/v1/auth/google`                | Google Login          |
+| GET    | `/api/v1/auth/google/callback`       | Google OAuth Callback |
+| POST   | `/api/v1/auth/password/forgot`       | Forgot Password       |
+| PUT    | `/api/v1/auth/password/reset/:token` | Reset Password        |
+
+---
+
+# 🔒 Security Features
+
+* JWT Based Authentication
+* HttpOnly Cookies
+* Secure Cookie Configuration
+* Password Hashing (bcrypt)
+* SHA-256 Reset Token Hashing
+* Email Validation
+* Google OAuth 2.0
+* One-Time Password Reset Tokens
+* Reset Token Expiration
+* Account Linking
+* Environment Variable Configuration
+* Async Error Handling
+* Centralized Error Handling
+
+---
+
+# 🚀 Future Improvements
+
+* Email Verification
+* Refresh Token Authentication
+* Role-Based Authorization
+* Multi-Factor Authentication (2FA)
+* Session Management with Redis
+* Login Rate Limiting
+* Account Lock After Failed Attempts
+* Device Management
+* Login History
+* Email Templates
+* OTP Login
+* Password Strength Checker
+
+---
+
+# 📌 Learning Outcomes
+
+During this module, the following concepts were implemented:
+
+* JWT Authentication
+* Cookie-Based Authentication
+* Google OAuth 2.0
+* Passport.js Integration
+* Password Hashing
+* Password Verification
+* Authentication Middleware
+* Protected Routes
+* Forgot Password Workflow
+* Password Reset Workflow
+* Secure Token Generation
+* SHA-256 Hashing
+* SMTP Email Integration
+* Nodemailer
+* Environment Variables
+* Secure Authentication Architecture
+
+---
