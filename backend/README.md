@@ -1245,3 +1245,247 @@ During this module, the following concepts were implemented:
 * Secure Authentication Architecture
 
 ---
+# 🛡️ Role-Based Access Control (RBAC)
+
+A secure Role-Based Access Control (RBAC) system implemented using **JWT Authentication**, **Express Middleware**, and **MongoDB** to protect sensitive API endpoints.
+
+This module ensures that only authorized users can access protected resources while restricting administrative operations to users with the **Admin** role.
+
+---
+
+# ✨ Features
+
+* JWT Authentication Middleware
+* Protected Routes
+* Role-Based Authorization
+* Admin Only Routes
+* Public Routes
+* Secure Route Chaining
+* Reusable Authorization Middleware
+* Scalable Role Management
+
+---
+
+# 👥 User Roles
+
+Currently the application supports two roles:
+
+| Role  | Permissions                                      |
+| ----- | ------------------------------------------------ |
+| User  | View products and access customer features       |
+| Admin | Full product management (Create, Update, Delete) |
+
+---
+
+# 🔐 Authentication Middleware
+
+The `isAuthenticatedUser` middleware is responsible for:
+
+* Reading JWT from HttpOnly Cookies
+* Supporting Bearer Token Authentication
+* Verifying JWT
+* Fetching User from Database
+* Attaching User to `req.user`
+* Blocking Unauthorized Requests
+
+Authentication Flow
+
+```text
+Client Request
+       │
+       ▼
+Read JWT Token
+       │
+       ▼
+Verify JWT
+       │
+       ▼
+Find User
+       │
+       ▼
+Attach User to req.user
+       │
+       ▼
+Next Middleware
+```
+
+---
+
+# 👑 Authorization Middleware
+
+The `authorizeRoles()` middleware checks whether the authenticated user has permission to access a specific resource.
+
+Supported Features:
+
+* Single Role Authorization
+* Multiple Role Authorization
+* Reusable Middleware
+* HTTP 403 Forbidden Response
+* Dynamic Role Checking
+
+Example:
+
+```javascript
+authorizeRoles("admin")
+```
+
+or
+
+```javascript
+authorizeRoles("admin", "seller")
+```
+
+Authorization Flow
+
+```text
+Authenticated User
+        │
+        ▼
+Read req.user.role
+        │
+        ▼
+Role Allowed?
+     │         │
+    Yes       No
+     │         │
+     ▼         ▼
+ Continue   403 Forbidden
+```
+
+---
+
+# 🔄 Middleware Execution Order
+
+Every protected route follows this execution pipeline:
+
+```text
+Client Request
+       │
+       ▼
+isAuthenticatedUser
+       │
+       ▼
+authorizeRoles()
+       │
+       ▼
+Request Validation
+       │
+       ▼
+Controller
+       │
+       ▼
+Database
+       │
+       ▼
+Response
+```
+
+Execution Order:
+
+1. Authenticate User
+2. Check User Role
+3. Validate Request Body
+4. Execute Controller Logic
+
+---
+
+# 🌐 Public Routes
+
+Accessible without authentication.
+
+| Method | Endpoint               |
+| ------ | ---------------------- |
+| GET    | `/api/v1/products`     |
+| GET    | `/api/v1/products/:id` |
+
+---
+
+# 🔒 Protected Admin Routes
+
+Require both authentication and admin privileges.
+
+| Method | Endpoint               | Access |
+| ------ | ---------------------- | ------ |
+| POST   | `/api/v1/products`     | Admin  |
+| PUT    | `/api/v1/products/:id` | Admin  |
+| DELETE | `/api/v1/products/:id` | Admin  |
+
+---
+
+# 📂 Middleware Structure
+
+```text
+middlewares/
+│
+├── auth.js
+│     ├── isAuthenticatedUser()
+│     └── authorizeRoles()
+│
+├── asyncHandler.js
+│
+├── validate.js
+│
+└── error.js
+```
+
+---
+
+# 🔐 Security Features
+
+* JWT Token Verification
+* HttpOnly Cookie Authentication
+* Bearer Token Support
+* Protected API Endpoints
+* Admin Authorization
+* Dynamic Role Validation
+* Unauthorized Access Protection
+* Forbidden Resource Protection
+
+---
+
+# 🚀 Benefits
+
+* Clean Middleware Architecture
+* Reusable Authorization Logic
+* Easy to Extend with New Roles
+* Production Ready Route Protection
+* Separation of Authentication & Authorization
+* Follows Industry Best Practices
+
+---
+
+# 📈 Future Enhancements
+
+Additional roles can be added easily:
+
+* Admin
+* Seller
+* Customer
+* Moderator
+* Delivery Partner
+* Support Agent
+
+Example:
+
+```javascript
+authorizeRoles("admin", "seller", "moderator")
+```
+
+---
+
+# 📚 Concepts Covered
+
+This module demonstrates the following backend concepts:
+
+* JWT Authentication
+* Authentication Middleware
+* Authorization Middleware
+* Role-Based Access Control (RBAC)
+* Express Middleware Chaining
+* Route Protection
+* Secure API Design
+* Permission Management
+* Admin Panel Security
+* Express Routing Best Practices
+
+---
