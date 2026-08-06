@@ -1,5 +1,5 @@
 import Joi from "joi";
-
+// Register Schema
 export const registerSchema = Joi.object({
   name: Joi.string().min(3).max(25).trim().required().messages({
     "string.empty": "Name is required",
@@ -29,7 +29,7 @@ export const registerSchema = Joi.object({
   }).optional(),
 });
 
-
+// Forgot Password Schema
 export const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
     "string.email": "Please enter a valid email address",
@@ -37,5 +37,25 @@ export const loginSchema = Joi.object({
   }),
   password: Joi.string().required().messages({
     "string.empty": "Password is required",
+  }),
+});
+
+// Forgot Password Schema
+export const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please enter a valid email address",
+    "string.empty": "Email is required",
+  }),
+});
+
+// Reset Password Schema
+export const resetPasswordSchema = Joi.object({
+  password: Joi.string().min(6).required().messages({
+    "string.min": "Password must be at least 6 characters long",
+    "string.empty": "Password is required",
+  }),
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    "any.only": "Passwords do not match",
+    "string.empty": "Confirm Password is required",
   }),
 });
