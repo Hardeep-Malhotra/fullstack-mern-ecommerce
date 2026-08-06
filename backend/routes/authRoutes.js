@@ -24,12 +24,24 @@ import {
 } from "../validators/userValidation.js";
 const router = express.Router();
 
+// Rate Limiters Import
+import {
+  authLimiter,
+  passwordResetLimiter,
+} from "../middlewares/rateLimiter.js";
+
 // Public Routes
-router.post("/register", validateBody(registerSchema), registerUser);
-router.post("/login", validateBody(loginSchema), loginUser);
+router.post(
+  "/register",
+  authLimiter,
+  validateBody(registerSchema),
+  registerUser,
+);
+router.post("/login", authLimiter, validateBody(loginSchema), loginUser);
 router.get("/logout", logoutUser);
 router.post(
   "/password/forgot",
+  passwordResetLimiter,
   validateBody(forgotPasswordSchema),
   forgotPassword,
 );
