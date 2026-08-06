@@ -28,3 +28,14 @@ export const registerSchema = Joi.object({
     url: Joi.string().allow(""),
   }).optional(),
 });
+
+
+export const loginSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please enter a valid email address",
+    "string.empty": "Email is required",
+  }),
+  password: Joi.string().required().messages({
+    "string.empty": "Password is required",
+  }),
+});

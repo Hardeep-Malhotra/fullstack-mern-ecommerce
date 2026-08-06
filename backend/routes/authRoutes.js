@@ -4,10 +4,12 @@ import passport from "passport";
 // Controllers
 import { registerUser } from "../controllers/authController/userRegisterController.js";
 import { googleAuthCallback } from "../controllers/authController/googleAuthController.js";
+import { loginUser } from "../controllers/authController/userLoginController.js";
 
 // Middlewares & Validators
 import { validateBody } from "../middlewares/validate.js";
 import { registerSchema } from "../validators/userValidation.js";
+import { loginSchema } from "../validators/userValidation.js";
 
 const router = express.Router();
 
@@ -19,6 +21,8 @@ router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"], session: false })
 );
+// Login Route
+router.post("/login", validateBody(loginSchema), loginUser);
 
 // 3. Google Auth Callback
 router.get(
