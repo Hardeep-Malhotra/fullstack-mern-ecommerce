@@ -1489,3 +1489,330 @@ This module demonstrates the following backend concepts:
 * Express Routing Best Practices
 
 ---
+# 🛡️ API Security Layer (Helmet + Rate Limiting)
+
+A production-ready API security module built using **Helmet.js** and **Express Rate Limit** to protect the backend against common web attacks, brute-force attempts, API abuse, and denial-of-service attacks.
+
+This security layer is designed following industry-standard backend security practices and provides multiple layers of protection for public and authenticated APIs.
+
+---
+
+# 🚀 Features
+
+## 🪖 Helmet Security
+
+* Secure HTTP Response Headers
+* Clickjacking Protection
+* MIME Sniffing Protection
+* Cross-Site Scripting (XSS) Mitigation
+* Browser Security Enhancements
+* Information Leakage Prevention
+* Secure Defaults for Express Applications
+
+---
+
+## 🚦 API Rate Limiting
+
+* Global API Rate Limiter
+* Authentication Rate Limiter
+* Password Reset Rate Limiter
+* IP-Based Request Limiting
+* Brute Force Protection
+* Email Spam Prevention
+* Route-Specific Rate Limiting
+* Reusable Middleware Architecture
+
+---
+
+# 🛡️ Why Helmet?
+
+Helmet automatically configures secure HTTP headers to reduce common web vulnerabilities without requiring manual header configuration.
+
+### Helmet protects against:
+
+* Clickjacking Attacks
+* MIME Type Sniffing
+* Browser Information Disclosure
+* Cross-Site Scripting (XSS)
+* Unsafe Browser Defaults
+
+---
+
+# 🚦 Why Rate Limiting?
+
+Without rate limiting, attackers can:
+
+* Perform brute-force login attacks
+* Spam forgot password emails
+* Flood backend APIs
+* Overload the server
+* Launch denial-of-service attempts
+* Consume backend resources
+
+Rate limiting restricts how many requests a single IP can make within a defined time window.
+
+---
+
+# 📊 Implemented Rate Limiters
+
+## 🔐 Authentication Limiter
+
+Applied On:
+
+* Register
+* Login
+
+Configuration
+
+* Window: **15 Minutes**
+* Maximum Requests: **10**
+
+Purpose
+
+* Prevent Brute Force Attacks
+* Reduce Fake Registrations
+* Protect Authentication Endpoints
+
+---
+
+## 🔑 Password Reset Limiter
+
+Applied On:
+
+* Forgot Password
+
+Configuration
+
+* Window: **15 Minutes**
+* Maximum Requests: **5**
+
+Purpose
+
+* Prevent Email Spamming
+* Prevent Password Reset Abuse
+* Protect SMTP Resources
+
+---
+
+## 🌍 Global API Limiter
+
+Applied On:
+
+```text id="99j0ng"
+/api/v1/*
+```
+
+Configuration
+
+* Window: **15 Minutes**
+* Maximum Requests: **300**
+
+Purpose
+
+* Prevent API Abuse
+* Protect Server Resources
+* Improve Backend Stability
+
+---
+
+# 📂 Project Structure
+
+```text id="9jlwmw"
+backend/
+│
+├── middlewares/
+│   ├── auth.js
+│   ├── asyncHandler.js
+│   ├── validate.js
+│   ├── error.js
+│   └── rateLimiter.js
+│
+├── app.js
+│
+└── routes/
+    ├── authRoutes.js
+    └── productRoutes.js
+```
+
+---
+
+# 🔄 Security Middleware Flow
+
+```text id="dvlm9t"
+Incoming Request
+        │
+        ▼
+Helmet Security
+        │
+        ▼
+Global API Rate Limiter
+        │
+        ▼
+Authentication Rate Limiter (If Required)
+        │
+        ▼
+JWT Authentication
+        │
+        ▼
+Role-Based Authorization
+        │
+        ▼
+Request Validation
+        │
+        ▼
+Controller
+        │
+        ▼
+Database
+        │
+        ▼
+Response
+```
+
+---
+
+# 🌐 Route Protection
+
+## Public APIs
+
+| Method | Endpoint               |
+| ------ | ---------------------- |
+| GET    | `/api/v1/products`     |
+| GET    | `/api/v1/products/:id` |
+
+---
+
+## Authentication APIs
+
+| Method | Endpoint                       | Protection             |
+| ------ | ------------------------------ | ---------------------- |
+| POST   | `/api/v1/auth/register`        | Auth Limiter           |
+| POST   | `/api/v1/auth/login`           | Auth Limiter           |
+| POST   | `/api/v1/auth/password/forgot` | Password Reset Limiter |
+
+---
+
+## Protected APIs
+
+Protected using:
+
+* JWT Authentication
+* Role-Based Authorization
+* Request Validation
+* Global API Limiter
+
+---
+
+# 🔐 Security Benefits
+
+## Helmet
+
+* Secure HTTP Headers
+* Reduced Browser-Based Attacks
+* Better Production Readiness
+* Improved Client Security
+* Lower Attack Surface
+
+---
+
+## Rate Limiting
+
+* Brute Force Prevention
+* API Abuse Protection
+* Email Spam Prevention
+* DoS Mitigation
+* Resource Protection
+* Stable API Performance
+
+---
+
+
+---
+
+# ⚙️ Middleware Execution Order
+
+```text id="yzvnft"
+Client Request
+       │
+       ▼
+Helmet
+       │
+       ▼
+Global Rate Limiter
+       │
+       ▼
+Authentication Rate Limiter
+       │
+       ▼
+JWT Authentication
+       │
+       ▼
+Authorization (RBAC)
+       │
+       ▼
+Request Validation
+       │
+       ▼
+Business Logic
+       │
+       ▼
+Database
+       │
+       ▼
+Response
+```
+
+---
+
+# 📚 Concepts Covered
+
+This module demonstrates the implementation of:
+
+* Helmet.js
+* Express Rate Limit
+* API Security
+* HTTP Security Headers
+* IP-Based Rate Limiting
+* Route-Specific Middleware
+* Authentication Protection
+* Brute Force Prevention
+* Email Spam Prevention
+* Middleware Chaining
+* Secure Express Architecture
+* Production Backend Security
+
+---
+
+# 🚀 Future Improvements
+
+* Redis-Based Distributed Rate Limiting
+* Dynamic User-Based Limits
+* Sliding Window Algorithm
+* IP Blacklisting
+* Device-Based Rate Limiting
+* Cloudflare / WAF Integration
+* Security Monitoring Dashboard
+* Request Analytics
+* CAPTCHA Integration
+* API Key Rate Limiting
+
+---
+
+# 🎯 Learning Outcomes
+
+During this module, the following concepts were implemented:
+
+* Helmet Security Middleware
+* Secure HTTP Headers
+* Express Rate Limiting
+* Global API Protection
+* Route-Specific Rate Limiting
+* Authentication Endpoint Protection
+* Password Reset Protection
+* Middleware Architecture
+* IP-Based Request Limiting
+* Express Security Best Practices
+* Production API Hardening
+* Scalable Security Design
+
+---
