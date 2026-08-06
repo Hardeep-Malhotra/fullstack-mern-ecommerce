@@ -1,9 +1,12 @@
 import express from "express";
 
-// Middlewares & Validators
+// Middlewares
 import { validateBody } from "../middlewares/validate.js";
+import { isAuthenticatedUser, authorizeRoles } from "../middlewares/auth.js";
+
+// Validators
 import { createProductSchema } from "../validators/productValidator.js";
-import { updateProductSchema } from "../validators/updateProductValidator.js"; // <-- Import Here
+import { updateProductSchema } from "../validators/updateProductValidator.js";
 
 // Controllers
 import { getAllProducts } from "../controllers/productController/getAllProductsController.js";
@@ -14,15 +17,40 @@ import { updateProduct } from "../controllers/productController/updateProductCon
 
 const router = express.Router();
 
+// ==========================================
+// 1. ALL PRODUCTS & CREATE PRODUCT
+// ==========================================
 router
   .route("/products")
+  // Public Route (Anyone can view products)
   .get(getAllProducts)
-  .post(validateBody(createProductSchema), createProducts);
+  // Admin Only Route (Login Required + Admin Role Required)
+  .post(
+    isAuthenticatedUser,
+    authorizeRoles("admin"),
+    validateBody(createProductSchema),
+    createProducts
+  );
 
+// ==========================================
+// 2. SINGLE PRODUCT (GET, UPDATE, DELETE)
+// ==========================================
 router
   .route("/products/:id")
+  // Public Route (Anyone can view product details)
   .get(getSingleProduct)
-  .put(validateBody(updateProductSchema), updateProduct) 
-  .delete(deleteProduct);
+  // Admin Only Route (Update Product)
+  .put(
+    isAuthenticatedUser,
+    authorizeRoles("admin"),
+    validateBody(updateProductSchema),
+    updateProduct
+  )
+  // Admin Only Route (Delete Product)
+  .delete(
+    isAuthenticatedUser,
+    authorizeRoles("admin"),
+    deleteProduct
+  );
 
 export default router;
