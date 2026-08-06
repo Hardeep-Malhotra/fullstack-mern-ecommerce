@@ -1816,3 +1816,84 @@ During this module, the following concepts were implemented:
 * Scalable Security Design
 
 ---
+# 👤 Product Ownership & Admin Authorization
+
+This module ensures that only authenticated administrators can create, update, and delete products while automatically tracking the creator of each product.
+
+## ✨ Features
+
+* JWT Protected Product Management
+* Role-Based Product Access (Admin Only)
+* Automatic Product Ownership
+* User Reference using MongoDB ObjectId
+* Product Creator Tracking
+* Secure Backend Assignment of Creator ID
+* Ownership Ready for Auditing and Analytics
+
+---
+
+## 🔄 Workflow
+
+```text
+Admin Login
+      │
+      ▼
+JWT Authentication
+      │
+      ▼
+Role Verification (Admin)
+      │
+      ▼
+Create / Update / Delete Product
+      │
+      ▼
+Assign req.user._id
+      │
+      ▼
+Store Product with Creator Reference
+```
+
+---
+
+## 📂 Product Schema
+
+Each product stores the creator's reference using MongoDB ObjectId.
+
+```javascript
+user: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  required: true
+}
+```
+
+---
+
+## 🔒 Security
+
+* Product ownership is assigned **only by the backend**.
+* The client cannot manually choose the product creator.
+* Only authenticated users with the **Admin** role can manage products.
+* Every product maintains a reference to the admin who created it.
+
+---
+
+## 🚀 Benefits
+
+* Secure Product Management
+* Admin Activity Tracking
+* Ownership-Based Data Relations
+* Easy User Population with `populate()`
+* Scalable Architecture for Future Features
+
+---
+
+## 📚 Concepts Covered
+
+* JWT Authentication
+* Role-Based Access Control (RBAC)
+* MongoDB References
+* Mongoose ObjectId
+* Express Middleware Chaining
+* Backend Data Ownership
+* Secure API Design
