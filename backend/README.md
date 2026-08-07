@@ -2112,3 +2112,72 @@ Return Users & Total Count
 * Mongoose `.lean()`
 * Secure REST API Design
 * User Management System
+
+
+# 👑 Admin Role Management
+
+A secure admin module that allows authorized administrators to update user roles while preventing accidental privilege loss and unauthorized role changes.
+
+## ✨ Features
+
+* Admin-Only Role Management
+* Update User Role
+* Role Validation using Joi
+* Self-Demotion Protection
+* JWT Protected Route
+* Role-Based Access Control (RBAC)
+* Secure User Existence Verification
+
+---
+
+## 🔄 Workflow
+
+```text id="k2w8aq"
+Admin Login
+      │
+      ▼
+JWT Authentication
+      │
+      ▼
+Role Verification (Admin)
+      │
+      ▼
+Validate Role
+      │
+      ▼
+Check User Exists
+      │
+      ▼
+Prevent Self-Demotion
+      │
+      ▼
+Update User Role
+```
+
+---
+
+## 📡 API Endpoint
+
+| Method | Endpoint                      | Access               |
+| ------ | ----------------------------- | -------------------- |
+| PUT    | `/api/v1/auth/admin/user/:id` | Private (Admin Only) |
+
+---
+
+## 🔒 Security
+
+* Only authenticated administrators can update user roles.
+* Role values are restricted to **`user`** and **`admin`**.
+* Prevents administrators from removing their own admin privileges.
+* Uses JWT Authentication, RBAC, and Joi Validation for secure role management.
+
+---
+
+## 📚 Concepts Covered
+
+* JWT Authentication
+* Role-Based Access Control (RBAC)
+* Admin User Management
+* Role Validation
+* Self-Demotion Protection
+* Secure REST API Design
