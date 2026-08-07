@@ -2031,3 +2031,84 @@ Return Updated Profile
 * Joi Validation
 * Express Middleware
 * Secure REST API Design
+
+# 👥 Admin User Management
+
+A secure administration module that enables administrators to manage registered users across the platform. This API provides an overview of all users while protecting sensitive information and restricting access to authorized administrators only.
+
+---
+
+# ✨ Features
+
+* Admin-Only Access
+* View All Registered Users
+* Total User Count
+* Password Hash Exclusion
+* Optimized Database Queries using `.lean()`
+* JWT Protected Route
+* Role-Based Authorization (RBAC)
+* Secure User Management
+
+---
+
+# 🔄 Workflow
+
+```text
+Admin Login
+      │
+      ▼
+JWT Authentication
+      │
+      ▼
+Role Verification (Admin)
+      │
+      ▼
+Fetch All Users
+      │
+      ▼
+Exclude Password Field
+      │
+      ▼
+Return Users & Total Count
+```
+
+---
+
+# 📡 API Endpoint
+
+| Method | Endpoint              | Access               |
+| ------ | --------------------- | -------------------- |
+| GET    | `/api/v1/admin/users` | Private (Admin Only) |
+
+---
+
+# 🔒 Security
+
+* Accessible only to authenticated administrators.
+* Password hashes are excluded using `.select("-password")`.
+* User data is optimized with `.lean()` for improved query performance.
+* Protected using JWT Authentication and Role-Based Access Control (RBAC).
+
+---
+
+# 🚀 Benefits
+
+* Centralized User Management
+* Admin Dashboard Integration
+* Secure User Data Exposure
+* Faster Query Execution
+* Ready for Analytics & Reporting
+* Easily Extendable for Future Admin Features
+
+---
+
+# 📚 Concepts Covered
+
+* JWT Authentication
+* Role-Based Access Control (RBAC)
+* Admin Dashboard APIs
+* MongoDB Query Optimization
+* Mongoose `.select()`
+* Mongoose `.lean()`
+* Secure REST API Design
+* User Management System
