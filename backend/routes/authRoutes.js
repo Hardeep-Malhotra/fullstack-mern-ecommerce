@@ -7,6 +7,7 @@ import { loginUser } from "../controllers/authController/userLoginController.js"
 import { googleAuthCallback } from "../controllers/authController/googleAuthController.js";
 import {
   getUserProfile,
+  updateUserProfile,
   logoutUser,
 } from "../controllers/authController/userProfileController.js";
 import {
@@ -18,6 +19,7 @@ import {
 import { validateBody } from "../middlewares/validate.js";
 import { isAuthenticatedUser } from "../middlewares/auth.js";
 import { registerSchema, loginSchema } from "../validators/userValidation.js";
+import { updateProfileSchema } from "../validators/userValidation.js";
 import {
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -69,5 +71,10 @@ router.get(
 
 // Protected Routes
 router.get("/me", isAuthenticatedUser, getUserProfile);
-
+router.put(
+  "/me/update",
+  isAuthenticatedUser,
+  validateBody(updateProfileSchema),
+  updateUserProfile,
+);
 export default router;

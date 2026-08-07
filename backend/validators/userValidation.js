@@ -59,3 +59,13 @@ export const resetPasswordSchema = Joi.object({
     "string.empty": "Confirm Password is required",
   }),
 });
+
+// Update User profileSchema
+export const updateProfileSchema = Joi.object({
+  name: Joi.string().min(3).max(30).messages({
+    "string.min": "Name must be at least 3 characters long",
+  }),
+  email: Joi.string().email().messages({
+    "string.email": "Please enter a valid email address",
+  }),
+});
