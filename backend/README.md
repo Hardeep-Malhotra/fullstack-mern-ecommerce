@@ -1897,3 +1897,67 @@ user: {
 * Express Middleware Chaining
 * Backend Data Ownership
 * Secure API Design
+# 📦 Admin Product Management API
+
+A secure API that allows an authenticated administrator to retrieve **only the products created by their own account**.
+
+## ✨ Features
+
+* Admin-Only Access
+* JWT Protected Route
+* Fetch Products by Logged-in Admin
+* User-Based Product Filtering
+* Product Ownership Verification
+* Secure Database Query using `req.user.id`
+
+---
+
+## 🔄 Workflow
+
+```text
+Admin Login
+      │
+      ▼
+JWT Authentication
+      │
+      ▼
+Role Verification (Admin)
+      │
+      ▼
+Read req.user.id
+      │
+      ▼
+Find Products
+(user: req.user.id)
+      │
+      ▼
+Return Admin's Products
+```
+
+---
+
+## 📡 API Endpoint
+
+| Method | Endpoint                 | Access               |
+| ------ | ------------------------ | -------------------- |
+| GET    | `/api/v1/admin/products` | Private (Admin Only) |
+
+---
+
+## 🔒 Security
+
+* Accessible only to authenticated administrators.
+* Returns only products created by the logged-in admin.
+* Prevents access to products owned by other administrators.
+* Uses JWT authentication and MongoDB user references for ownership validation.
+
+---
+
+## 📚 Concepts Covered
+
+* JWT Authentication
+* Role-Based Access Control (RBAC)
+* MongoDB ObjectId References
+* User-Based Data Filtering
+* Secure REST API Design
+* Mongoose Query Filtering
