@@ -8,6 +8,8 @@ import { googleAuthCallback } from "../controllers/authController/googleAuthCont
 import {
   getUserProfile,
   updateUserProfile,
+  getAllUsers,
+  getSingleUser,
   logoutUser,
 } from "../controllers/authController/userProfileController.js";
 import {
@@ -17,9 +19,10 @@ import {
 
 // Middlewares & Validation
 import { validateBody } from "../middlewares/validate.js";
-import { isAuthenticatedUser } from "../middlewares/auth.js";
+import { isAuthenticatedUser  , authorizeRoles} from "../middlewares/auth.js";
 import { registerSchema, loginSchema } from "../validators/userValidation.js";
 import { updateProfileSchema } from "../validators/userValidation.js";
+
 import {
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -76,5 +79,23 @@ router.put(
   isAuthenticatedUser,
   validateBody(updateProfileSchema),
   updateUserProfile,
+);
+
+// ==========================================
+// ADMIN ROUTES
+// ==========================================
+router.get(
+  "/admin/users",
+  isAuthenticatedUser,
+  authorizeRoles("admin"),
+  getAllUsers,
+);
+
+// Single User Fetching by URL Param ID
+router.get(
+  "/admin/user/:id",
+  isAuthenticatedUser,
+  authorizeRoles("admin"),
+  getSingleUser,
 );
 export default router;
