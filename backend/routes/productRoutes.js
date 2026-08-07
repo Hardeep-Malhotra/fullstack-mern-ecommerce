@@ -14,6 +14,7 @@ import { getSingleProduct } from "../controllers/productController/getSingleProd
 import { createProducts } from "../controllers/productController/createProductController.js";
 import { deleteProduct } from "../controllers/productController/deleteProductController.js";
 import { updateProduct } from "../controllers/productController/updateProductController.js";
+import { getAdminProducts } from "../controllers/productController/getAdminProductsController.js";
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router
     isAuthenticatedUser,
     authorizeRoles("admin"),
     validateBody(createProductSchema),
-    createProducts
+    createProducts,
   );
 
 // ==========================================
@@ -44,13 +45,16 @@ router
     isAuthenticatedUser,
     authorizeRoles("admin"),
     validateBody(updateProductSchema),
-    updateProduct
+    updateProduct,
   )
   // Admin Only Route (Delete Product)
-  .delete(
-    isAuthenticatedUser,
-    authorizeRoles("admin"),
-    deleteProduct
-  );
+  .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteProduct);
 
+// ===============================================================
+// Admin Route: Get products created by logged-in admin
+// ===============================================================
+
+router
+  .route("/admin/products")
+  .get(isAuthenticatedUser, authorizeRoles("admin"), getAdminProducts);
 export default router;
