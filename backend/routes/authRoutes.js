@@ -10,6 +10,7 @@ import {
   updateUserProfile,
   getAllUsers,
   getSingleUser,
+  updateUserRole,
   logoutUser,
 } from "../controllers/authController/userProfileController.js";
 import {
@@ -19,9 +20,11 @@ import {
 
 // Middlewares & Validation
 import { validateBody } from "../middlewares/validate.js";
-import { isAuthenticatedUser  , authorizeRoles} from "../middlewares/auth.js";
+import { isAuthenticatedUser, authorizeRoles } from "../middlewares/auth.js";
 import { registerSchema, loginSchema } from "../validators/userValidation.js";
 import { updateProfileSchema } from "../validators/userValidation.js";
+import { updateUserRoleSchema } from "../validators/userValidation.js";
+
 
 import {
   forgotPasswordSchema,
@@ -97,5 +100,14 @@ router.get(
   isAuthenticatedUser,
   authorizeRoles("admin"),
   getSingleUser,
+);
+
+// Update User Role Route
+router.put(
+  "/admin/user/:id",
+  isAuthenticatedUser,
+  authorizeRoles("admin"),
+  validateBody(updateUserRoleSchema),
+  updateUserRole,
 );
 export default router;

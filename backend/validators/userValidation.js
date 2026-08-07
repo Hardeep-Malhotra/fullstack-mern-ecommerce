@@ -69,3 +69,12 @@ export const updateProfileSchema = Joi.object({
     "string.email": "Please enter a valid email address",
   }),
 });
+
+
+// Update User Role
+export const updateUserRoleSchema = Joi.object({
+  role: Joi.string().valid("user", "admin").required().messages({
+    "any.only": "Role must be either 'user' or 'admin'",
+    "any.required": "Role field is required",
+  }),
+});

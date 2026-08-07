@@ -88,3 +88,43 @@ export const getSingleUser = asyncHandler(async (req, res, next) => {
     user,
   });
 });
+
+// @desc    Update User Role (Admin Only)
+// @route   PUT /api/v1/auth/admin/user/:id
+// @access  Private (Admin Only)
+export const updateUserRole = asyncHandler(async (req, res, next) => {
+  const { role } = req.body;
+
+  // 1. Lockout Guard: Self-Demotion check
+  if (req.user.id === req.params.id && role !== "admin") {
+    return res.status(400).json({
+      success: false,
+      message: "You cannot demote your own admin account.",
+    });
+  }
+
+  // 2. User existence check
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: `User not found with ID: ${req.params.id}`,
+    });
+  }
+
+  // 3. Update role & save
+  user.role = role;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "User role updated successfully",
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
+});
