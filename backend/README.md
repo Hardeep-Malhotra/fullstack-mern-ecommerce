@@ -1961,3 +1961,73 @@ Return Admin's Products
 * User-Based Data Filtering
 * Secure REST API Design
 * Mongoose Query Filtering
+# 👤 User Profile Management
+
+A secure profile management module that allows authenticated users to view and update their personal information while maintaining account security.
+
+## ✨ Features
+
+* View Logged-in User Profile
+* Update User Name
+* Update User Email
+* JWT Protected Routes
+* Request Validation using Joi
+* MongoDB Data Validation
+* Google Account Email Protection
+* Real-Time Profile Updates
+
+---
+
+## 🔄 Workflow
+
+```text id="8cjlwm"
+User Login
+      │
+      ▼
+JWT Authentication
+      │
+      ▼
+Access Profile
+      │
+      ▼
+Update Name / Email
+      │
+      ▼
+Validate Request
+      │
+      ▼
+Update Database
+      │
+      ▼
+Return Updated Profile
+```
+
+---
+
+## 📡 API Endpoints
+
+| Method | Endpoint                 | Access  |
+| ------ | ------------------------ | ------- |
+| GET    | `/api/v1/auth/me`        | Private |
+| PUT    | `/api/v1/auth/me/update` | Private |
+
+---
+
+## 🔒 Security
+
+* Only authenticated users can update their profile.
+* Profile updates are validated before saving.
+* Google OAuth users cannot directly change their registered email.
+* Updated data is validated using Joi and Mongoose validators.
+
+---
+
+## 📚 Concepts Covered
+
+* JWT Authentication
+* Protected Routes
+* User Profile Management
+* MongoDB Document Updates
+* Joi Validation
+* Express Middleware
+* Secure REST API Design
