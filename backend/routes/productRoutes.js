@@ -18,6 +18,7 @@ import { createProducts } from "../controllers/productController/createProductCo
 import { deleteProduct } from "../controllers/productController/deleteProductController.js";
 import { updateProduct } from "../controllers/productController/updateProductController.js";
 import { getAdminProducts } from "../controllers/productController/getAdminProductsController.js";
+import { getProductReviews } from "../controllers/productController/getReviewsController.js";
 import { createProductReview } from "../controllers/productController/createReviewController.js";
 
 const router = express.Router();
@@ -50,8 +51,13 @@ router
   .put(
     isAuthenticatedUser,
     validateBody(createReviewSchema),
-    createProductReview
+    createProductReview,
   );
+
+// =========================================================
+// 👈 NEW PUBLIC ROUTE FOR GETTING ALL REVIEWS OF A PRODUCT
+// ==========================================================
+router.route("/products/reviews").get(getProductReviews);
 
 // ==========================================
 // 4. DYNAMIC ROUTE WITH :id (PEHLE DYNAMIC WALE KE NICHE HONI CHAHIYE)
