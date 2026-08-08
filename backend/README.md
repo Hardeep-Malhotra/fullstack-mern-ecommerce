@@ -2181,3 +2181,74 @@ Update User Role
 * Role Validation
 * Self-Demotion Protection
 * Secure REST API Design
+
+---
+# 🗑️ Admin User Deletion
+
+A secure admin-only API that allows authorized administrators to permanently delete user accounts while preventing accidental deletion of their own admin account.
+
+## ✨ Features
+
+* Admin-Only User Deletion
+* JWT Authentication
+* Role-Based Access Control (RBAC)
+* User Existence Validation
+* Self-Deletion / Lockout Protection
+* Secure Database Deletion
+* Centralized Error Handling
+
+---
+
+## 🔄 Workflow
+
+```text id="4k9x2m"
+Admin Request
+      │
+      ▼
+JWT Authentication
+      │
+      ▼
+Admin Role Verification
+      │
+      ▼
+Check Self-Deletion
+      │
+      ▼
+Check User Exists
+      │
+      ▼
+Delete User
+      │
+      ▼
+Success Response
+```
+
+---
+
+## 📡 API Endpoint
+
+| Method | Endpoint                      | Access               |
+| ------ | ----------------------------- | -------------------- |
+| DELETE | `/api/v1/auth/admin/user/:id` | Private (Admin Only) |
+
+---
+
+## 🔒 Security
+
+* Only authenticated administrators can delete users.
+* An admin cannot delete their own account through this endpoint.
+* User existence is verified before deletion.
+* Unauthorized users receive a `403 Forbidden` response through RBAC.
+* Errors are handled through the centralized error-handling system.
+
+---
+
+## 📚 Concepts Covered
+
+* JWT Authentication
+* Role-Based Access Control (RBAC)
+* Admin User Management
+* Self-Deletion Protection
+* MongoDB Document Deletion
+* Express Middleware Chaining
+* Secure REST API Design
