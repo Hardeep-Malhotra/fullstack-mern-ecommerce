@@ -5,7 +5,10 @@ import { validateBody } from "../middlewares/validate.js";
 import { isAuthenticatedUser, authorizeRoles } from "../middlewares/auth.js";
 
 // Validators
-import { createProductSchema } from "../validators/productValidator.js";
+import {
+  createProductSchema,
+  createReviewSchema,
+} from "../validators/productValidator.js";
 import { updateProductSchema } from "../validators/updateProductValidator.js";
 
 // Controllers
@@ -15,6 +18,7 @@ import { createProducts } from "../controllers/productController/createProductCo
 import { deleteProduct } from "../controllers/productController/deleteProductController.js";
 import { updateProduct } from "../controllers/productController/updateProductController.js";
 import { getAdminProducts } from "../controllers/productController/getAdminProductsController.js";
+import { createProductReview } from "../controllers/productController/createReviewController.js";
 
 const router = express.Router();
 
@@ -23,9 +27,7 @@ const router = express.Router();
 // ==========================================
 router
   .route("/products")
-  // Public Route (Anyone can view products)
   .get(getAllProducts)
-  // Admin Only Route (Login Required + Admin Role Required)
   .post(
     isAuthenticatedUser,
     authorizeRoles("admin"),
@@ -34,27 +36,35 @@ router
   );
 
 // ==========================================
-// 2. SINGLE PRODUCT (GET, UPDATE, DELETE)
+// 2. ADMIN DASHBOARD PRODUCTS (STATIC ROUTE)
+// ==========================================
+router
+  .route("/admin/products")
+  .get(isAuthenticatedUser, authorizeRoles("admin"), getAdminProducts);
+
+// ==========================================
+// 3. PRODUCT REVIEWS (STATIC ROUTE - PEHLE AAYEGA)
+// ==========================================
+router
+  .route("/products/review") // 👈 '/review' ko '/products/review' kar diya
+  .put(
+    isAuthenticatedUser,
+    validateBody(createReviewSchema),
+    createProductReview
+  );
+
+// ==========================================
+// 4. DYNAMIC ROUTE WITH :id (PEHLE DYNAMIC WALE KE NICHE HONI CHAHIYE)
 // ==========================================
 router
   .route("/products/:id")
-  // Public Route (Anyone can view product details)
   .get(getSingleProduct)
-  // Admin Only Route (Update Product)
   .put(
     isAuthenticatedUser,
     authorizeRoles("admin"),
     validateBody(updateProductSchema),
     updateProduct,
   )
-  // Admin Only Route (Delete Product)
   .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteProduct);
 
-// ===============================================================
-// Admin Route: Get products created by logged-in admin
-// ===============================================================
-
-router
-  .route("/admin/products")
-  .get(isAuthenticatedUser, authorizeRoles("admin"), getAdminProducts);
 export default router;
