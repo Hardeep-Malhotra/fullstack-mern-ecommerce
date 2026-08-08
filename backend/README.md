@@ -2252,3 +2252,635 @@ Success Response
 * MongoDB Document Deletion
 * Express Middleware Chaining
 * Secure REST API Design
+
+# ⭐ Product Review & Rating System
+
+A production-ready product review and rating system implemented for **NexusCart AI** using **Node.js, Express.js, MongoDB, and Mongoose**.
+
+The system allows authenticated users to add, update, and delete their reviews while providing public access to product reviews. Product ratings and review counts are automatically recalculated whenever reviews are added, updated, or deleted.
+
+---
+
+# 🚀 Features
+
+* ⭐ Add Product Review
+* ✏️ Update Existing Review
+* 🗑️ Delete Review
+* 📋 Get All Reviews of a Product
+* 🔐 Authentication-Based Review Actions
+* 👤 User-Based Review Ownership
+* 🚫 One Review Per User Per Product
+* 📊 Automatic Average Rating Calculation
+* 🔢 Automatic Review Count
+* 🔄 Automatic Rating Recalculation
+* 🛡️ Protected Review Operations
+* ⚡ Centralized Error Handling
+* 🧩 MongoDB Embedded Review Architecture
+
+---
+
+# 🏗️ Review Architecture
+
+Reviews are stored directly inside the corresponding product document.
+
+Example:
+
+```json
+{
+  "_id": "product_id",
+  "name": "Apple MacBook Air M2",
+  "ratings": 4.5,
+  "numberOfReviews": 2,
+  "reviews": [
+    {
+      "user": "user_id_1",
+      "name": "Hardeep Singh",
+      "rating": 5,
+      "comment": "Excellent product!"
+    },
+    {
+      "user": "user_id_2",
+      "name": "Rahul",
+      "rating": 4,
+      "comment": "Very good laptop."
+    }
+  ]
+}
+```
+
+This approach keeps product-specific review data together and makes product detail queries straightforward.
+
+---
+
+# 🔐 Authentication & Review Ownership
+
+Review creation, updating, and deletion are tied to the authenticated user.
+
+The authenticated user's ID is obtained from:
+
+```javascript
+req.user.id
+```
+
+When creating a review:
+
+```javascript
+const review = {
+  user: req.user.id,
+  name: req.user.name,
+  rating: Number(rating),
+  comment
+};
+```
+
+This ensures that the backend determines the review owner instead of trusting a user ID sent by the client.
+
+---
+
+# ⭐ Add / Update Review
+
+## Endpoint
+
+```text
+PUT /api/v1/review
+```
+
+## Access
+
+```text
+Private - Logged-in Users
+```
+
+## Request Body
+
+```json
+{
+  "productId": "PRODUCT_ID",
+  "rating": 5,
+  "comment": "Awesome product!"
+}
+```
+
+---
+
+## 🔄 Add Review Flow
+
+```text
+User Login
+    │
+    ▼
+JWT Authentication
+    │
+    ▼
+Submit Review
+    │
+    ▼
+Find Product
+    │
+    ▼
+Check Existing Review
+    │
+    ├───────────────┐
+    ▼               ▼
+ Existing         New User
+ Review
+    │               │
+    ▼               ▼
+ Update          Add Review
+    │               │
+    └───────┬───────┘
+            ▼
+    Recalculate Rating
+            │
+            ▼
+    Update Review Count
+            │
+            ▼
+       Save Product
+```
+
+---
+
+# 🚫 Duplicate Review Prevention
+
+The system ensures that one user cannot create multiple reviews for the same product.
+
+Before adding a review, the system checks:
+
+```javascript
+const isReviewed = product.reviews.find(
+  (rev) => rev.user.toString() === req.user.id.toString()
+);
+```
+
+If a matching user ID is found, the existing review is updated instead of creating another review.
+
+---
+
+# ✏️ Existing Review Update
+
+If the user has already reviewed the product:
+
+```javascript
+if (isReviewed) {
+  product.reviews.forEach((rev) => {
+    if (rev.user.toString() === req.user.id.toString()) {
+      rev.rating = rating;
+      rev.comment = comment;
+    }
+  });
+}
+```
+
+Example:
+
+Before:
+
+```text
+Hardeep → ⭐ 5
+"Excellent product"
+```
+
+User submits:
+
+```text
+Rating: 3
+Comment: "Product is average."
+```
+
+After:
+
+```text
+Hardeep → ⭐ 3
+"Product is average."
+```
+
+A duplicate review is not created.
+
+---
+
+# ➕ New Review Creation
+
+If the user has not previously reviewed the product:
+
+```javascript
+product.reviews.push(review);
+```
+
+The review count is then updated:
+
+```javascript
+product.numberOfReviews = product.reviews.length;
+```
+
+---
+
+# 📊 Automatic Average Rating
+
+Every time a review is added or updated, the product's average rating is recalculated.
+
+The system first calculates the total rating:
+
+```javascript
+const totalRating = product.reviews.reduce(
+  (acc, item) => item.rating + acc,
+  0
+);
+```
+
+Then calculates the average:
+
+```javascript
+product.ratings =
+  totalRating / product.reviews.length;
+```
+
+### Example
+
+Reviews:
+
+```text
+5 ⭐
+4 ⭐
+3 ⭐
+```
+
+Total:
+
+```text
+5 + 4 + 3 = 12
+```
+
+Number of Reviews:
+
+```text
+3
+```
+
+Average:
+
+```text
+12 / 3 = 4
+```
+
+Product becomes:
+
+```json
+{
+  "ratings": 4,
+  "numberOfReviews": 3
+}
+```
+
+---
+
+# 📋 Get Product Reviews
+
+## Endpoint
+
+```text
+GET /api/v1/products/reviews?id=PRODUCT_ID
+```
+
+## Access
+
+```text
+Public
+```
+
+Users do not need to be authenticated to view product reviews.
+
+---
+
+## Request
+
+```text
+GET /api/v1/products/reviews?id=6a75b99e3b9511178582e2de
+```
+
+---
+
+## Response
+
+```json
+{
+  "success": true,
+  "count": 2,
+  "reviews": [
+    {
+      "user": "6a75e214c7b0a10dfd1b97de",
+      "name": "Bhumika gaba",
+      "rating": 5,
+      "comment": "Awesome quality laptop!"
+    },
+    {
+      "user": "6a770ba2e14252911f08623e",
+      "name": "Angel",
+      "rating": 5,
+      "comment": "Bad quality laptop!"
+    }
+  ]
+}
+```
+
+---
+
+# 🗑️ Delete Review
+
+Authenticated users can delete their own review.
+
+## Endpoint
+
+```text
+DELETE /api/v1/review
+```
+
+## Access
+
+```text
+Private - Logged-in Users
+```
+
+The backend identifies the review using the authenticated user's ID and removes the corresponding review from the product.
+
+---
+
+# 🔄 Delete Review Flow
+
+```text
+Logged-in User
+      │
+      ▼
+JWT Authentication
+      │
+      ▼
+Find Product
+      │
+      ▼
+Find User's Review
+      │
+      ▼
+Remove Review
+      │
+      ▼
+Recalculate Rating
+      │
+      ▼
+Update Review Count
+      │
+      ▼
+Save Product
+      │
+      ▼
+Success Response
+```
+
+---
+
+# 📉 Rating Recalculation After Delete
+
+The rating is recalculated after deleting a review.
+
+Example:
+
+Before deletion:
+
+```text
+Bhumika → ⭐5
+Angel   → ⭐5
+```
+
+```text
+numberOfReviews = 2
+ratings = 5
+```
+
+After Bhumika's review is deleted:
+
+```text
+Angel → ⭐5
+```
+
+Database becomes:
+
+```json
+{
+  "ratings": 5,
+  "numberOfReviews": 1
+}
+```
+
+This keeps the product's rating data synchronized with the actual reviews.
+
+---
+
+# 🧩 Review Data Structure
+
+Each review contains:
+
+| Field     | Description                           |
+| --------- | ------------------------------------- |
+| `user`    | ID of the user who created the review |
+| `name`    | User name stored with the review      |
+| `rating`  | Numeric product rating                |
+| `comment` | User's review/comment                 |
+
+Example:
+
+```json
+{
+  "user": "6a75e214c7b0a10dfd1b97de",
+  "name": "Bhumika gaba",
+  "rating": 5,
+  "comment": "Awesome quality laptop!"
+}
+```
+
+---
+
+# 🔒 Security
+
+The review system uses authenticated user information rather than trusting ownership data from the client.
+
+### Security principles implemented:
+
+* JWT Authentication
+* User Identity from `req.user`
+* Review Ownership Tracking
+* Protected Add Review API
+* Protected Update Review API
+* Protected Delete Review API
+* Public Review Reading
+* Centralized Error Handling
+* Backend-Controlled User ID
+
+The client does not decide which user owns a review.
+
+---
+
+# 🛡️ Error Handling
+
+The module handles common scenarios such as:
+
+### Product Not Found
+
+```json
+{
+  "success": false,
+  "message": "Product not found"
+}
+```
+
+### Missing Product ID
+
+```json
+{
+  "success": false,
+  "message": "Please provide product ID in query parameters (?id=...)"
+}
+```
+
+### Unauthorized Request
+
+Authentication middleware prevents unauthenticated users from accessing protected review operations.
+
+---
+
+# 📡 API Summary
+
+| Method | Endpoint                                 | Access  | Purpose             |
+| ------ | ---------------------------------------- | ------- | ------------------- |
+| PUT    | `/api/v1/review`                         | Private | Add / Update Review |
+| GET    | `/api/v1/products/reviews?id=PRODUCT_ID` | Public  | Get Product Reviews |
+| DELETE | `/api/v1/review`                         | Private | Delete Review       |
+
+---
+
+# 🧠 Complete System Flow
+
+```text
+                 PRODUCT
+                    │
+                    ▼
+             Product Details
+                    │
+                    ▼
+                Reviews
+                    │
+       ┌────────────┼────────────┐
+       ▼            ▼            ▼
+      Add          Get         Delete
+       │            │            │
+       ▼            ▼            ▼
+ Authenticate     Public     Authenticate
+       │            │            │
+       ▼            ▼            ▼
+ Check Existing   Return      Find User
+       │          Reviews       Review
+   ┌───┴───┐        │            │
+   ▼       ▼        │            ▼
+ Exists   New       │         Remove
+   │       │        │            │
+ Update   Push      │            ▼
+   └───┬───┘        │       Recalculate
+       │            │            │
+       └────────────┼────────────┘
+                    ▼
+            Recalculate Rating
+                    │
+                    ▼
+              Save Product
+```
+
+---
+
+# ⚡ Performance Considerations
+
+Reviews are embedded inside the product document.
+
+### Advantages
+
+* Product + reviews can be fetched together.
+* Simple product detail queries.
+* No additional review collection lookup required.
+* Easy rating calculation.
+
+### Consideration
+
+For extremely high-scale systems with millions of reviews per product, a separate `Review` collection may be more appropriate.
+
+For the current NexusCart AI architecture, embedded reviews provide a simple and effective design.
+
+---
+
+# 🚀 Future Improvements
+
+Possible enhancements for the review system:
+
+* Review Pagination
+* Review Sorting
+* Helpful / Not Helpful Votes
+* Review Images
+* Verified Purchase Badge
+* Review Moderation
+* Admin Review Deletion
+* Review Reporting
+* Review Replies
+* Rating Distribution
+
+Example future rating distribution:
+
+```text
+5 ⭐ █████████████████ 70%
+4 ⭐ ████████          20%
+3 ⭐ ███                7%
+2 ⭐                   2%
+1 ⭐                   1%
+```
+
+---
+
+# 📚 Concepts Covered
+
+This module demonstrates:
+
+* REST API Design
+* JWT Authentication
+* User-Based Authorization
+* MongoDB Embedded Documents
+* Mongoose Queries
+* Array Operations
+* `find()`
+* `forEach()`
+* `push()`
+* `reduce()`
+* Dynamic Average Calculation
+* CRUD Operations
+* Review Ownership
+* Data Consistency
+* Error Handling
+* API Security
+
+---
+
+# 🎯 Learning Outcome
+
+By implementing this module, the backend now supports a complete real-world product review system where users can:
+
+* Add reviews
+* Update their reviews
+* Delete their reviews
+* View product reviews
+* Maintain one review per product
+* Automatically calculate product ratings
+* Automatically maintain review counts
+
+The system is structured to be easily extended with advanced e-commerce review features in the future.
+
+---
+
+# 👨‍💻 Author
+
+**Hardeep Singh**
+
+Implemented a production-oriented **Product Review & Rating System** for **NexusCart AI**, including authenticated review management, duplicate review prevention, automatic rating calculations, review ownership, public review retrieval, and secure review deletion.
