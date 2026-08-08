@@ -11,6 +11,7 @@ import {
   getAllUsers,
   getSingleUser,
   updateUserRole,
+  deleteUser,
   logoutUser,
 } from "../controllers/authController/userProfileController.js";
 import {
@@ -24,7 +25,6 @@ import { isAuthenticatedUser, authorizeRoles } from "../middlewares/auth.js";
 import { registerSchema, loginSchema } from "../validators/userValidation.js";
 import { updateProfileSchema } from "../validators/userValidation.js";
 import { updateUserRoleSchema } from "../validators/userValidation.js";
-
 
 import {
   forgotPasswordSchema,
@@ -94,20 +94,14 @@ router.get(
   getAllUsers,
 );
 
-// Single User Fetching by URL Param ID
-router.get(
-  "/admin/user/:id",
-  isAuthenticatedUser,
-  authorizeRoles("admin"),
-  getSingleUser,
-);
-
-// Update User Role Route
-router.put(
-  "/admin/user/:id",
-  isAuthenticatedUser,
-  authorizeRoles("admin"),
-  validateBody(updateUserRoleSchema),
-  updateUserRole,
-);
+router
+  .route("/admin/user/:id")
+  .get(isAuthenticatedUser, authorizeRoles("admin"), getSingleUser)
+  .put(
+    isAuthenticatedUser,
+    authorizeRoles("admin"),
+    validateBody(updateUserRoleSchema),
+    updateUserRole,
+  )
+  .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
 export default router;

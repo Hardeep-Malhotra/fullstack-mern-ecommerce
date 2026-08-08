@@ -1,4 +1,5 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
+import ErrorHandler from "../../middlewares/error.js";
 import User from "../../models/userModel.js";
 
 // @desc    Get Currently Logged-in User Profile
@@ -126,5 +127,34 @@ export const updateUserRole = asyncHandler(async (req, res, next) => {
       email: user.email,
       role: user.role,
     },
+  });
+});
+
+// @desc    Delete User (Admin Only)
+// @route   DELETE /api/v1/auth/admin/user/:id
+// @access  Private (Admin Only)
+export const deleteUser = asyncHandler(async (req, res, next) => {
+  // 1. Lockout Guard: Admin apne hi account ko is route se delete nahi kar sakta
+  if (req.user.id === req.params.id) {
+    return next(
+      new ErrorHandler("You cannot delete your own admin account.", 400),
+    );
+  }
+
+  // 2. User Existence Check
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    return next(
+      new ErrorHandler(`User not found with ID: ${req.params.id}`, 404),
+    );
+  }
+
+  // 3. Delete User Document
+  await user.deleteOne();
+
+  res.status(200).json({
+    success: true,
+    message: "User deleted successfully",
   });
 });
