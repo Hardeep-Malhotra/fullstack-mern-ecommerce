@@ -2879,8 +2879,834 @@ The system is structured to be easily extended with advanced e-commerce review f
 
 ---
 
+# 🛒 Order Management System
+
+A production-oriented **Order Management System** implemented for **NexusCart AI** using **Node.js, Express.js, MongoDB, and Mongoose**.
+
+This module handles the complete order lifecycle — from creating an order and validating products/stock to viewing orders, admin order management, status updates, cancellation, and inventory restoration.
+
+---
+
+# 🚀 Features
+
+* 🛒 Create New Order
+* 👤 User-Specific Orders
+* 📦 Get Logged-in User's Orders
+* 🔍 Get Single Order Details
+* 👑 Admin Get All Orders
+* 🔄 Admin Update Order Status
+* ❌ Cancel Order
+* 📦 Automatic Stock Restoration on Cancellation
+* 🗑️ Admin Order Deletion
+* 🔐 JWT Authentication
+* 🛡️ Role-Based Access Control
+* 🔒 Order Ownership Authorization
+* 💰 Server-Side Price Verification
+* 🚫 Duplicate Order Prevention using Payment ID
+* 📊 Automatic Total Price Calculation
+* 📦 Automatic Inventory Management
+* ⚡ Centralized Error Handling
+
+---
+
+# 🏗️ Order Architecture
+
+The order system is divided into user and admin operations.
+
+```text
+                         ORDER MANAGEMENT
+                                │
+              ┌─────────────────┴─────────────────┐
+              │                                   │
+             USER                                ADMIN
+              │                                   │
+      ┌───────┼────────┐                 ┌────────┼────────┐
+      │       │        │                 │        │        │
+    Create   My     Single            All Orders Update   Delete
+    Order   Orders   Order             Orders   Status   Order
+      │       │        │                 │        │        │
+      └───────┴────────┘                 └────────┴────────┘
+              │                                   │
+              └──────────────┬────────────────────┘
+                             ▼
+                       Order Database
+```
+
+---
+
+# 📁 Project Structure
+
+```text
+backend/
+│
+├── controllers/
+│   └── orderController/
+│       ├── createOrderController.js
+│       ├── getMyOrdersController.js
+│       ├── getSingleOrderController.js
+│       ├── getAllOrdersController.js
+│       ├── updateOrderStatusController.js
+│       ├── cancelOrderController.js
+│       └── deleteOrderController.js
+│
+├── models/
+│   ├── orderModel.js
+│   └── productModel.js
+│
+├── routes/
+│   └── orderRoutes.js
+│
+├── validators/
+│   └── orderValidator.js
+│
+└── middlewares/
+    ├── auth.js
+    ├── validate.js
+    └── error.js
+```
+
+---
+
+# 🔐 Authentication & Authorization
+
+Protected order APIs use JWT authentication.
+
+```text
+Request
+   ↓
+JWT Token
+   ↓
+isAuthenticatedUser
+   ↓
+req.user
+   ↓
+Controller
+```
+
+Admin-only routes add another layer:
+
+```text
+isAuthenticatedUser
+        ↓
+authorizeRoles("admin")
+        ↓
+Admin Controller
+```
+
+This ensures that normal users cannot access administrative order operations.
+
+---
+
+# 🛒 1. Create New Order
+
+## Endpoint
+
+```text
+POST /api/v1/order/new
+```
+
+## Access
+
+```text
+Private - Logged-in User
+```
+
+---
+
+## Request Body
+
+```json
+{
+  "shippingInfo": {
+    "address": "Model Town, Street No 4",
+    "city": "Yamunanagar",
+    "state": "Haryana",
+    "country": "India",
+    "pinCode": "135001",
+    "phoneNo": "9876543210"
+  },
+  "orderItems": [
+    {
+      "product": "PRODUCT_ID",
+      "quantity": 1,
+      "image": "https://example.com/product.jpg"
+    }
+  ],
+  "paymentInfo": {
+    "id": "pay_test_001",
+    "status": "succeeded"
+  },
+  "taxPrice": 100,
+  "shippingPrice": 0
+}
+```
+
+---
+
+# 🔒 Server-Side Price Verification
+
+The backend never blindly trusts the product price sent by the frontend.
+
+Instead:
+
+```text
+Frontend Product
+       ↓
+Product ID
+       ↓
+MongoDB
+       ↓
+Actual Product Price
+       ↓
+Backend Calculation
+```
+
+For example:
+
+```text
+Frontend says:
+Price = ₹1
+
+Database says:
+Price = ₹99,900
+
+Backend uses:
+₹99,900
+```
+
+This prevents users from manipulating the request and purchasing products at an unauthorized price.
+
+---
+
+# 📦 Stock Validation
+
+Before creating an order, the backend checks product availability.
+
+```text
+Database Stock = 5
+Requested Quantity = 3
+
+5 >= 3
+     ↓
+Stock Available
+     ↓
+Continue
+```
+
+If the requested quantity exceeds available stock:
+
+```text
+Database Stock = 5
+Requested Quantity = 10
+
+5 < 10
+     ↓
+Order Rejected
+```
+
+Example response:
+
+```json
+{
+  "success": false,
+  "message": "Insufficient stock for product"
+}
+```
+
+---
+
+# 🚫 Duplicate Order Prevention
+
+The system uses the payment ID as an idempotency mechanism.
+
+```javascript
+Order.findOne({
+  "paymentInfo.id": paymentInfo.id
+});
+```
+
+If an order already exists with the same payment ID, another order is not created.
+
+```text
+Payment ID
+    ↓
+Already exists?
+    │
+ ┌──┴──┐
+YES    NO
+ │      │
+Reject  Create
+```
+
+This helps protect against duplicate orders caused by:
+
+* Network retries
+* Duplicate frontend requests
+* Payment callback retries
+* User refreshing/re-submitting a request
+
+---
+
+# 💰 Order Price Calculation
+
+The backend calculates:
+
+```text
+Items Price
+     +
+Tax
+     +
+Shipping
+     =
+Total Price
+```
+
+Example:
+
+```text
+Items Price    = ₹99,900
+Tax Price      = ₹17,982
+Shipping Price = ₹0
+─────────────────────
+Total Price    = ₹117,882
+```
+
+The final amount is calculated on the server.
+
+---
+
+# 📦 Inventory Update
+
+After a successful order:
+
+```javascript
+$inc: {
+  stock: -item.quantity
+}
+```
+
+Example:
+
+```text
+Old Stock = 15
+Purchased = 1
+
+15 - 1 = 14
+```
+
+The product inventory is automatically reduced.
+
+---
+
+# 📋 2. Get My Orders
+
+## Endpoint
+
+```text
+GET /api/v1/orders/me
+```
+
+## Access
+
+```text
+Private - Logged-in User
+```
+
+The backend uses:
+
+```javascript
+Order.find({
+  user: req.user._id
+})
+```
+
+Therefore users can only retrieve their own orders.
+
+Orders are sorted by:
+
+```javascript
+.sort({
+  createdAt: -1
+})
+```
+
+which means the latest orders appear first.
+
+---
+
+## Example Response
+
+```json
+{
+  "success": true,
+  "count": 1,
+  "orders": [
+    {
+      "_id": "ORDER_ID",
+      "totalPrice": 117882,
+      "orderStatus": "Processing"
+    }
+  ]
+}
+```
+
+---
+
+# 🔍 3. Get Single Order
+
+## Endpoint
+
+```text
+GET /api/v1/order/:id
+```
+
+## Access
+
+```text
+Private
+```
+
+The backend retrieves the order using:
+
+```javascript
+Order.findById(req.params.id)
+```
+
+User information can also be populated:
+
+```javascript
+.populate("user", "name email")
+```
+
+---
+
+# 🔐 Order Ownership Security
+
+A normal user can only view their own order.
+
+The authorization rule is:
+
+```text
+Order Owner
+      OR
+Admin
+      ↓
+Allowed
+```
+
+If a normal user attempts to access another user's order:
+
+```text
+403 Unauthorized
+```
+
+This prevents ID-based unauthorized access.
+
+---
+
+# 👑 4. Admin — Get All Orders
+
+## Endpoint
+
+```text
+GET /api/v1/admin/orders
+```
+
+## Access
+
+```text
+Private - Admin Only
+```
+
+Middleware:
+
+```javascript
+isAuthenticatedUser,
+authorizeRoles("admin")
+```
+
+Admin can use this API to manage orders across the platform.
+
+Typical admin dashboard information can include:
+
+```text
+Total Orders
+Processing Orders
+Shipped Orders
+Delivered Orders
+Cancelled Orders
+Revenue
+```
+
+---
+
+# 🔄 5. Admin — Update Order Status
+
+## Endpoint
+
+```text
+PUT /api/v1/admin/order/:id
+```
+
+## Access
+
+```text
+Private - Admin Only
+```
+
+Order status represents the order lifecycle.
+
+Example:
+
+```text
+Processing
+    ↓
+Shipped
+    ↓
+Delivered
+```
+
+The admin can update the status according to the business rules implemented by the application.
+
+---
+
+# ❌ 6. Cancel Order
+
+## Endpoint
+
+```text
+PUT /api/v1/order/cancel/:id
+```
+
+## Access
+
+```text
+Private - Logged-in User
+```
+
+The cancellation flow verifies that the user is authorized to cancel the order.
+
+Typical flow:
+
+```text
+User Request
+     ↓
+Find Order
+     ↓
+Verify Ownership
+     ↓
+Check Cancellation Rules
+     ↓
+Change Order Status
+     ↓
+Restore Stock
+     ↓
+Save Order
+```
+
+---
+
+# 📦 Stock Restoration on Cancellation
+
+When an order is cancelled, purchased stock can be returned to inventory.
+
+Example:
+
+```text
+Before Order:
+Stock = 15
+
+User purchases:
+Quantity = 2
+
+After Order:
+Stock = 13
+
+Order Cancelled:
+Stock = 15
+```
+
+Flow:
+
+```text
+Order Cancellation
+        ↓
+Order Items
+        ↓
+Product IDs
+        ↓
+Restore Quantities
+        ↓
+Inventory Updated
+```
+
+This prevents inventory from remaining incorrectly reduced after cancellation.
+
+---
+
+# 🗑️ 7. Admin — Delete Order
+
+## Endpoint
+
+```text
+DELETE /api/v1/admin/order/:id
+```
+
+## Access
+
+```text
+Private - Admin Only
+```
+
+Only administrators can permanently remove an order record.
+
+Middleware:
+
+```javascript
+isAuthenticatedUser,
+authorizeRoles("admin")
+```
+
+---
+
+# 🛡️ Security Layers
+
+The order management system implements multiple security layers.
+
+## 1. Authentication
+
+```text
+JWT
+ ↓
+isAuthenticatedUser
+```
+
+Only authenticated users can access protected endpoints.
+
+---
+
+## 2. Role Authorization
+
+Admin operations require:
+
+```javascript
+authorizeRoles("admin")
+```
+
+---
+
+## 3. Ownership Authorization
+
+Users can only access their own orders.
+
+```text
+req.user._id
+      ↓
+Compare
+      ↓
+order.user
+```
+
+---
+
+## 4. Server-Side Price Verification
+
+Product prices are retrieved from MongoDB instead of trusting frontend values.
+
+---
+
+## 5. Stock Validation
+
+Orders cannot exceed available inventory.
+
+---
+
+## 6. Payment ID Idempotency
+
+The same payment ID cannot create multiple orders.
+
+---
+
+# 📡 API Summary
+
+| Method | Endpoint                   | Access     | Purpose          |
+| ------ | -------------------------- | ---------- | ---------------- |
+| POST   | `/api/v1/order/new`        | User       | Create Order     |
+| GET    | `/api/v1/orders/me`        | User       | Get My Orders    |
+| GET    | `/api/v1/order/:id`        | User/Admin | Get Single Order |
+| PUT    | `/api/v1/order/cancel/:id` | User       | Cancel Order     |
+| GET    | `/api/v1/admin/orders`     | Admin      | Get All Orders   |
+| PUT    | `/api/v1/admin/order/:id`  | Admin      | Update Status    |
+| DELETE | `/api/v1/admin/order/:id`  | Admin      | Delete Order     |
+
+---
+
+# 🧪 Testing Checklist
+
+## Order Creation
+
+* [x] Create order
+* [x] Product validation
+* [x] Stock validation
+* [x] Server-side price verification
+* [x] Tax calculation
+* [x] Shipping calculation
+* [x] Total calculation
+* [x] Payment information saved
+* [x] Stock reduced
+* [x] Duplicate payment ID prevented
+
+## User Operations
+
+* [x] Get own orders
+* [x] Get single order
+* [x] Ownership verification
+* [x] Unauthorized order access blocked
+* [x] Cancel order
+* [x] Stock restoration
+
+## Admin Operations
+
+* [x] Get all orders
+* [x] Update order status
+* [x] Delete order
+* [x] Admin role protection
+
+---
+
+# 🧠 Important Backend Concepts Learned
+
+This module demonstrates several real-world backend concepts:
+
+* REST API Design
+* JWT Authentication
+* Role-Based Access Control
+* Resource Ownership
+* MongoDB Queries
+* Mongoose Models
+* `populate()`
+* MongoDB `$inc`
+* Inventory Management
+* Server-Side Price Calculation
+* Idempotency
+* Payment Tracking
+* Order Lifecycle Management
+* Error Handling
+* API Security
+* Data Validation
+
+---
+
+# 🔄 Complete Order Lifecycle
+
+```text
+                   CREATE ORDER
+                        │
+                        ▼
+                 Validate Products
+                        │
+                        ▼
+                  Check Stock
+                        │
+                        ▼
+             Verify DB Product Price
+                        │
+                        ▼
+               Calculate Total
+                        │
+                        ▼
+                 Create Order
+                        │
+                        ▼
+                Reduce Stock
+                        │
+                        ▼
+                  Processing
+                        │
+                        ▼
+                    Shipped
+                        │
+                        ▼
+                   Delivered
+                        │
+             ┌──────────┴──────────┐
+             │                     │
+         Cancelled               Delete
+             │                     │
+             ▼                     ▼
+       Restore Stock         Admin Action
+```
+
+---
+
+# ⚠️ Production Hardening — Future Improvement
+
+The current implementation contains important production-oriented protections, but the next major improvement should be **MongoDB Transactions**.
+
+Currently, order creation and stock update are separate database operations.
+
+A production transaction can make them atomic:
+
+```text
+START TRANSACTION
+       ↓
+Validate Stock
+       ↓
+Create Order
+       ↓
+Reduce Stock
+       ↓
+Everything Successful?
+    ┌──┴──┐
+   YES    NO
+    │      │
+ COMMIT  ROLLBACK
+```
+
+Similarly, cancellation can use a transaction:
+
+```text
+START TRANSACTION
+       ↓
+Cancel Order
+       ↓
+Restore Stock
+       ↓
+COMMIT
+```
+
+This prevents inconsistent states if one database operation succeeds while another fails.
+
+---
+
+# 🎯 Learning Outcome
+
+After implementing this module, NexusCart AI now has a complete order-management foundation supporting:
+
+```text
+User
+ │
+ ├── Create Order
+ ├── View My Orders
+ ├── View Single Order
+ └── Cancel Order
+          │
+          └── Restore Inventory
+
+Admin
+ │
+ ├── View All Orders
+ ├── View Any Order
+ ├── Update Order Status
+ └── Delete Order
+```
+
+The module combines **authentication, authorization, inventory management, payment tracking, price verification, idempotency, and order lifecycle management** into a single production-oriented e-commerce workflow.
+
+---
+
 # 👨‍💻 Author
 
 **Hardeep Singh**
 
-Implemented a production-oriented **Product Review & Rating System** for **NexusCart AI**, including authenticated review management, duplicate review prevention, automatic rating calculations, review ownership, public review retrieval, and secure review deletion.
+Developed as part of the **NexusCart AI** production-oriented e-commerce backend project, with a focus on learning and implementing real-world backend architecture and security practices.
