@@ -4,7 +4,7 @@ import Order from "../../models/orderModel.js";
 
 // Get Logged-in User Orders -> GET /api/v1/orders/me
 export const myOrders = asyncHandler(async (req, res, next) => {
-  const orders = await Order.find({ user: req.user._id }).sort({
+  const orders = await Order.find({ user: req.user._id  , isDeleted: {$ne: true},}).sort({
     createdAt: -1,
   });
 

@@ -6,7 +6,7 @@ import Order from "../../models/orderModel.js";
 
 // Get All Orders (Admin) -> GET /api/v1/admin/orders
 export const getAllOrders = asyncHandler(async (req, res, next) => {
-  const orders = await Order.find().sort({ createdAt: -1 });
+  const orders = await Order.find({isDeleted: { $ne: true }}).sort({ createdAt: -1 });
 
   // Dashboard metric: Calculate total revenue from all orders
   let totalAmount = 0;
