@@ -2934,36 +2934,7 @@ The order system is divided into user and admin operations.
 
 ---
 
-# 📁 Project Structure
 
-```text
-backend/
-│
-├── controllers/
-│   └── orderController/
-│       ├── createOrderController.js
-│       ├── getMyOrdersController.js
-│       ├── getSingleOrderController.js
-│       ├── getAllOrdersController.js
-│       ├── updateOrderStatusController.js
-│       ├── cancelOrderController.js
-│       └── deleteOrderController.js
-│
-├── models/
-│   ├── orderModel.js
-│   └── productModel.js
-│
-├── routes/
-│   └── orderRoutes.js
-│
-├── validators/
-│   └── orderValidator.js
-│
-└── middlewares/
-    ├── auth.js
-    ├── validate.js
-    └── error.js
-```
 
 ---
 
