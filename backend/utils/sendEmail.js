@@ -1,23 +1,26 @@
-import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config({ path: "./config/config.env" });
+
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmail = async (options) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: process.env.SMTP_PORT || 465,
-    service: process.env.SMTP_SERVICE || "gmail",
-    auth: {
-      user: process.env.SMTP_MAIL, // Aapki Gmail ID
-      pass: process.env.SMTP_PASSWORD, // Google App Password (2-Factor Authentication App Password)
-    },
-  });
+  console.log("Sending email to:", options.email);
 
-  const mailOptions = {
-    from: `${process.env.SMTP_FROM_NAME || "NexusCart"} <${process.env.SMTP_MAIL}>`,
-    to: options.email,
+  const { data, error } = await resend.emails.send({
+    from: "NexusCart AI <onboarding@resend.dev>",
+    to: [options.email],
     subject: options.subject,
     text: options.message,
-    html: options.html,
-  };
+    html: options.html || `<p>${options.message}</p>`,
+  });
 
-  await transporter.sendMail(mailOptions);
+  if (error) {
+    console.error("Resend Email Error:", error);
+    throw new Error(`Email sending failed: ${error.message}`);
+  }
+
+  return data;
 };
