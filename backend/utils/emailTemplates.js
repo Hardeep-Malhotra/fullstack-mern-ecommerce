@@ -358,3 +358,39 @@ export const welcomeEmailTemplate = (userName, userEmail) => {
   `;
 };
 
+// 1. Password Reset Link Request Template
+export const forgotPasswordTemplate = (resetPasswordUrl, userName) => {
+  return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #EF4444; color: #ffffff; padding: 20px; text-align: center;">
+        <h2 style="margin: 0;">Password Reset Request 🔐</h2>
+      </div>
+      <div style="padding: 24px; color: #333333;">
+        <p>Hi <strong>${userName}</strong>,</p>
+        <p>You requested a password reset for your NexusCart AI account.</p>
+        <p>Click the button below to set a new password. This link is valid for <strong>15 minutes</strong>.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetPasswordUrl}" style="background-color: #EF4444; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Password</a>
+        </div>
+        <p style="font-size: 13px; color: #666666;">If you did not request this email, please ignore it and your password will remain unchanged.</p>
+      </div>
+    </div>
+  `;
+};
+
+// 2. Password Changed Security Alert Template
+export const passwordChangedTemplate = (userName) => {
+  return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #10B981; color: #ffffff; padding: 20px; text-align: center;">
+        <h2 style="margin: 0;">Password Changed Successfully 🔒</h2>
+      </div>
+      <div style="padding: 24px; color: #333333;">
+        <p>Hi <strong>${userName}</strong>,</p>
+        <p>Your NexusCart AI account password was updated successfully.</p>
+        <p>If you performed this action, no further steps are required.</p>
+        <p style="font-size: 13px; color: #EF4444; font-weight: bold;">If you did not make this change, please contact our support team immediately.</p>
+      </div>
+    </div>
+  `;
+};
