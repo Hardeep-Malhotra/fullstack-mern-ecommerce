@@ -7,34 +7,19 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isAuthenticated, user } = useSelector(
-    (state) => state.auth || {}
-  );
+  // Redux Auth State
+  const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated);
+  const user = useSelector((state) => state.auth?.user);
 
-  const { cartItems = [] } = useSelector(
-    (state) => state.cart || {}
-  );
-
-  // ================= LOGOUT =================
-  const handleLogout = async () => {
-    try {
-      await dispatch(logoutUser()).unwrap();
-
-      toast.success("Logged Out Successfully");
-
-      // Logout ke baad login page par redirect
-      navigate("/login", { replace: true });
-    } catch (error) {
-      console.error("Logout Error:", error);
-
-      toast.error(error || "Logout failed");
-    }
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    toast.success("Logged Out Successfully");
+    navigate("/login");
   };
 
   return (
     <header className="bg-slate-900 text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-
         {/* Logo */}
         <Link
           to="/"
@@ -45,50 +30,41 @@ const Header = () => {
 
         {/* Navigation */}
         <nav className="flex items-center space-x-6">
-
-          {/* Home */}
-          <Link
-            to="/"
-            className="hover:text-indigo-400 transition"
-          >
+          <Link to="/" className="hover:text-indigo-400 transition">
             Home
           </Link>
 
-          {/* Products */}
-          <Link
-            to="/products"
-            className="hover:text-indigo-400 transition"
-          >
+          <Link to="/products" className="hover:text-indigo-400 transition">
             Products
           </Link>
 
-          {/* Cart */}
-          <Link
-            to="/cart"
-            className="relative hover:text-indigo-400 transition"
-          >
+          <Link to="/cart" className="hover:text-indigo-400 transition">
             Cart
-
-            {cartItems.length > 0 && (
-              <span className="ml-1 px-2 py-0.5 text-xs bg-indigo-600 rounded-full font-bold">
-                {cartItems.length}
-              </span>
-            )}
           </Link>
 
-          {/* Authentication */}
+          {/* Authentication State */}
           {isAuthenticated ? (
             <div className="flex items-center space-x-4">
-
-              {/* Account */}
+              {/* Profile / Account with Google Avatar */}
               <Link
                 to="/account"
-                className="font-medium text-indigo-300 hover:text-indigo-400 transition"
+                className="flex items-center gap-2 font-medium text-indigo-300 hover:text-indigo-400 transition"
               >
-                {user?.name || "Account"}
+                {user?.avatar?.url ? (
+                  <img
+                    src={user.avatar.url}
+                    alt={user?.name || "User Avatar"}
+                    className="w-8 h-8 rounded-full object-cover border border-indigo-500"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white">
+                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                )}
+                <span>{user?.name || "Account"}</span>
               </Link>
 
-              {/* Admin */}
+              {/* Admin Dashboard */}
               {user?.role === "admin" && (
                 <Link
                   to="/admin/dashboard"
@@ -98,7 +74,7 @@ const Header = () => {
                 </Link>
               )}
 
-              {/* Logout */}
+              {/* Logout Button */}
               <button
                 type="button"
                 onClick={handleLogout}
@@ -109,8 +85,6 @@ const Header = () => {
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-
-              {/* Login */}
               <Link
                 to="/login"
                 className="bg-indigo-600 px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
@@ -118,7 +92,6 @@ const Header = () => {
                 Login
               </Link>
 
-              {/* Register */}
               <Link
                 to="/register"
                 className="border border-indigo-500 text-indigo-400 px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-500 hover:text-white transition"
@@ -127,7 +100,6 @@ const Header = () => {
               </Link>
             </div>
           )}
-
         </nav>
       </div>
     </header>
