@@ -22,8 +22,8 @@ export const registerUser = asyncHandler(async (req, res, next) => {
     email,
     password,
     avatar,
-    role,
     provider: "local",
+     role: "user", 
   });
 
   // 📧 Send Welcome Email via Resend
