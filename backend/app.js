@@ -1,7 +1,10 @@
 import express from "express";
 import helmet from "helmet";
 import passport from "passport";
-import cors from "cors"; // 👈 1. Import CORS
+import cors from "cors";
+import cookieParser from "cookie-parser";
+
+import "./config/passport.js";
 
 import { apiLimiter } from "./middlewares/rateLimiter.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -11,36 +14,59 @@ import errorMiddleware from "./middlewares/error.js";
 
 const app = express();
 
-// 1. CORS Configuration (Sabse uper rakhein)
+// ==============================
+// CORS
+// ==============================
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
-// 2. Security Headers
+// ==============================
+// Security
+// ==============================
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // Cross-origin resource sharing allow karne ke liye
-  })
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
+  }),
 );
 
-// 3. Global Rate Limiter for all APIs
+// ==============================
+// Rate Limiter
+// ==============================
 app.use("/api/v1", apiLimiter);
 
-// 4. Body Parser & Session
+// ==============================
+// Body Parser
+// ==============================
 app.use(express.json());
+
+// ==============================
+// Cookie Parser ⭐
+// ==============================
+app.use(cookieParser());
+
+// ==============================
+// Passport
+// ==============================
 app.use(passport.initialize());
 
-// 5. Routes
+// ==============================
+// Routes
+// ==============================
 app.use("/api/v1", productRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1", orderRoutes);
 
+// ==============================
 // Error Middleware
+// ==============================
 app.use(errorMiddleware);
 
 export default app;

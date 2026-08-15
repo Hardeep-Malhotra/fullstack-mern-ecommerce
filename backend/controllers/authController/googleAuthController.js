@@ -5,16 +5,16 @@ import ErrorHandler from "../../utils/errorHandler.js"; // 1. Import your ErrorH
 
 // ================
 
-
 // ================= USER Sign With Google CONTROLLER =================
 // @desc    Google OAuth Callback
 // @route   GET /api/v1/auth/google/callback
+// controllers/authController.js
 export const googleAuthCallback = asyncHandler(async (req, res, next) => {
-  // Passport Strategy req.user me google user return kar deti hai
   if (!req.user) {
     return next(new ErrorHandler("Google Authentication Failed", 400));
   }
 
-  // Generate JWT & send httpOnly cookie
-  sendToken(req.user, 200, res);
+  // Frontend URL par redirect karein (e.g., http://localhost:5173)
+  const redirectUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  sendToken(req.user, 200, res, redirectUrl);
 });
