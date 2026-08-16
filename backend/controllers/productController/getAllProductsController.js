@@ -4,7 +4,7 @@ import ErrorHandler from "../../utils/ErrorHandler.js";
 import APIFunctionality from "../../utils/apiFunctionality.js";
 
 export const getAllProducts = asyncHandler(async (req, res, next) => {
-  const resultsPerPage = 2; // Production me 8 ya 12 rakh sakte ho
+  const resultsPerPage = 12;// Production me 8 ya 12 rakh sakte ho
 
   // 1. Search, Filter aur Sort Apply Kiya
   const apiFeatures = new APIFunctionality(Product.find(), req.query)
