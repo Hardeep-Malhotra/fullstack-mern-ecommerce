@@ -5,7 +5,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import "./config/passport.js";
-
+import "./config/cloudinary.js";
 import { apiLimiter } from "./middlewares/rateLimiter.js";
 import productRoutes from "./routes/productRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
