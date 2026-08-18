@@ -1,207 +1,3 @@
-// import { useState, useEffect } from "react";
-// import { Link, useNavigate } from "react-router-dom";
-// import { useDispatch, useSelector } from "react-redux";
-// import toast from "react-hot-toast";
-// import { registerUser, clearError } from "../../redux/slices/authSlice";
-
-// const RegisterForm = () => {
-//   const [user, setUser] = useState({
-//     name: "",
-//     email: "",
-//     password: "",
-//   });
-
-//   const { name, email, password } = user;
-
-//   const dispatch = useDispatch();
-//   const navigate = useNavigate();
-
-//   const { loading, isAuthenticated, error } = useSelector(
-//     (state) => state.auth || {},
-//   );
-
-//   // =========================
-//   // Handle Backend Errors
-//   // =========================
-//   useEffect(() => {
-//     if (error) {
-//       toast.error(error);
-//       dispatch(clearError());
-//     }
-//   }, [error, dispatch]);
-
-//   // =========================
-//   // Registration Success
-//   // =========================
-//   useEffect(() => {
-//     if (isAuthenticated) {
-//       navigate("/");
-//     }
-//   }, [isAuthenticated, navigate]);
-
-//   // =========================
-//   // Input Change
-//   // =========================
-//   const handleChange = (e) => {
-//     setUser({
-//       ...user,
-//       [e.target.name]: e.target.value,
-//     });
-//   };
-
-//   // =========================
-//   // Submit
-//   // =========================
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     if (!name || !email || !password) {
-//       toast.error("Please fill in all fields.");
-//       return;
-//     }
-
-//     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
-
-//     if (!passwordRegex.test(password)) {
-//       toast.error(
-//         "Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.",
-//       );
-//       return;
-//     }
-
-//     try {
-//       await dispatch(registerUser(user)).unwrap();
-
-//       toast.success("Account Created Successfully!");
-//       navigate("/");
-//     } catch (error) {
-//       console.log("Registration failed:", error);
-//     }
-//   };
-//   return (
-//     <div className="flex items-center justify-center min-h-[85vh] bg-slate-50 px-4">
-//       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-slate-100">
-//         <h2 className="text-3xl font-bold text-center text-slate-900 mb-2">
-//           Create an Account
-//         </h2>
-
-//         <p className="text-center text-slate-500 mb-6 text-sm">
-//           Join NexusCart AI to start shopping
-//         </p>
-
-//         <form onSubmit={handleSubmit} className="space-y-4">
-//           {/* Name */}
-//           <div>
-//             <label className="block text-sm font-medium text-slate-700 mb-1">
-//               Full Name
-//             </label>
-
-//             <input
-//               type="text"
-//               name="name"
-//               value={name}
-//               onChange={handleChange}
-//               placeholder="John Doe"
-//               required
-//               className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-//             />
-//           </div>
-
-//           {/* Email */}
-//           <div>
-//             <label className="block text-sm font-medium text-slate-700 mb-1">
-//               Email Address
-//             </label>
-
-//             <input
-//               type="email"
-//               name="email"
-//               value={email}
-//               onChange={handleChange}
-//               placeholder="you@example.com"
-//               required
-//               className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-//             />
-//           </div>
-
-//           {/* Password */}
-//           {/* Password */}
-//           <div>
-//             <label className="block text-sm font-medium text-slate-700 mb-1">
-//               Password
-//             </label>
-
-//             <input
-//               type="password"
-//               name="password"
-//               value={password}
-//               onChange={handleChange}
-//               placeholder="••••••••"
-//               required
-//               className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-//             />
-
-//             {/* Live Password Validation */}
-//             {password && (
-//               <div className="mt-2 space-y-1 text-xs">
-//                 <p
-//                   className={
-//                     /[A-Z]/.test(password) ? "text-green-600" : "text-red-500"
-//                   }
-//                 >
-//                   {/[A-Z]/.test(password) ? "✓" : "✗"} At least 1 uppercase
-//                   letter
-//                 </p>
-
-//                 <p
-//                   className={
-//                     /[a-z]/.test(password) ? "text-green-600" : "text-red-500"
-//                   }
-//                 >
-//                   {/[a-z]/.test(password) ? "✓" : "✗"} At least 1 lowercase
-//                   letter
-//                 </p>
-
-//                 <p
-//                   className={
-//                     /\d/.test(password) ? "text-green-600" : "text-red-500"
-//                   }
-//                 >
-//                   {/\d/.test(password) ? "✓" : "✗"} At least 1 number
-//                 </p>
-//               </div>
-//             )}
-//           </div>
-
-//           {/* Submit */}
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition duration-200 text-sm shadow-md disabled:bg-indigo-400 mt-2"
-//           >
-//             {loading ? "Registering..." : "Create Account"}
-//           </button>
-//         </form>
-        
-
-//         {/* Login Link */}
-//         <p className="text-center text-sm text-slate-600 mt-6">
-//           Already have an account?{" "}
-//           <Link
-//             to="/login"
-//             className="font-semibold text-indigo-600 hover:underline"
-//           >
-//             Sign In
-//           </Link>
-//         </p>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RegisterForm;
-
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -209,11 +5,8 @@ import toast from "react-hot-toast";
 import { registerUser, clearError } from "../../redux/slices/authSlice";
 
 const RegisterForm = () => {
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [user, setUser] = useState({ name: "", email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
 
   const { name, email, password } = user;
 
@@ -221,7 +14,7 @@ const RegisterForm = () => {
   const navigate = useNavigate();
 
   const { loading, isAuthenticated, error } = useSelector(
-    (state) => state.auth || {}
+    (state) => state.auth || {},
   );
 
   useEffect(() => {
@@ -232,16 +25,11 @@ const RegisterForm = () => {
   }, [error, dispatch]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
+    if (isAuthenticated) navigate("/");
   }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
-    setUser({
-      ...user,
-      [e.target.name]: e.target.value,
-    });
+    setUser({ ...user, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -256,7 +44,7 @@ const RegisterForm = () => {
 
     if (!passwordRegex.test(password)) {
       toast.error(
-        "Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number."
+        "Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.",
       );
       return;
     }
@@ -270,27 +58,40 @@ const RegisterForm = () => {
     }
   };
 
-  // Google OAuth Trigger Handler
   const handleGoogleAuth = () => {
     window.location.href = "http://localhost:8000/api/v1/auth/google";
   };
 
+  const checks = [
+    { label: "At least 1 uppercase letter", test: /[A-Z]/.test(password) },
+    { label: "At least 1 lowercase letter", test: /[a-z]/.test(password) },
+    { label: "At least 1 number", test: /\d/.test(password) },
+  ];
+
   return (
-    <div className="flex items-center justify-center min-h-[85vh] bg-slate-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-slate-100">
-        <h2 className="text-3xl font-bold text-center text-slate-900 mb-2">
+    <div className="flex items-center justify-center min-h-[85vh] bg-gradient-to-br from-orange-50 via-white to-slate-50 px-4 py-10">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-orange-100 animate-[fadeUp_0.5s_ease-out]">
+        {/* Logo mark */}
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-2xl shadow-lg shadow-orange-200 animate-[popIn_0.5s_ease-out]">
+            🛍️
+          </div>
+        </div>
+
+        <h2 className="text-3xl font-extrabold text-center text-slate-900 mb-1">
           Create an Account
         </h2>
 
         <p className="text-center text-slate-500 mb-6 text-sm">
-          Join NexusCart AI to start shopping
+          Join <span className="text-orange-500 font-semibold">Shopzy</span> to
+          start shopping
         </p>
 
         {/* Google OAuth Button */}
         <button
           type="button"
           onClick={handleGoogleAuth}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 text-slate-700 font-medium py-2.5 rounded-lg hover:bg-slate-50 transition duration-200 text-sm shadow-sm mb-4"
+          className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 text-slate-700 font-medium py-2.5 rounded-xl hover:border-orange-300 hover:bg-orange-50/50 hover:shadow-md transition-all duration-200 text-sm mb-4 active:scale-[0.98]"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -338,7 +139,7 @@ const RegisterForm = () => {
               onChange={handleChange}
               placeholder="John Doe"
               required
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 outline-none transition-all duration-200 text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             />
           </div>
 
@@ -354,7 +155,7 @@ const RegisterForm = () => {
               onChange={handleChange}
               placeholder="you@example.com"
               required
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 outline-none transition-all duration-200 text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             />
           </div>
 
@@ -363,40 +164,45 @@ const RegisterForm = () => {
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Password
             </label>
-            <input
-              type="password"
-              name="password"
-              value={password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-300 outline-none transition-all duration-200 text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors text-sm"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
 
             {/* Live Password Validation */}
             {password && (
               <div className="mt-2 space-y-1 text-xs">
-                <p
-                  className={
-                    /[A-Z]/.test(password) ? "text-green-600" : "text-red-500"
-                  }
-                >
-                  {/[A-Z]/.test(password) ? "✓" : "✗"} At least 1 uppercase letter
-                </p>
-                <p
-                  className={
-                    /[a-z]/.test(password) ? "text-green-600" : "text-red-500"
-                  }
-                >
-                  {/[a-z]/.test(password) ? "✓" : "✗"} At least 1 lowercase letter
-                </p>
-                <p
-                  className={
-                    /\d/.test(password) ? "text-green-600" : "text-red-500"
-                  }
-                >
-                  {/\d/.test(password) ? "✓" : "✗"} At least 1 number
-                </p>
+                {checks.map((c) => (
+                  <p
+                    key={c.label}
+                    className={`flex items-center gap-1.5 transition-colors duration-200 ${
+                      c.test ? "text-green-600" : "text-slate-400"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block w-3.5 text-center transition-transform duration-200 ${
+                        c.test ? "scale-110" : "scale-100"
+                      }`}
+                    >
+                      {c.test ? "✓" : "○"}
+                    </span>
+                    {c.label}
+                  </p>
+                ))}
               </div>
             )}
           </div>
@@ -405,8 +211,11 @@ const RegisterForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition duration-200 text-sm shadow-md disabled:bg-indigo-400 mt-2"
+            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-2.5 rounded-xl transition-all duration-200 text-sm shadow-md shadow-orange-200 hover:shadow-lg hover:shadow-orange-300 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:hover:translate-y-0 mt-2 flex items-center justify-center gap-2"
           >
+            {loading && (
+              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            )}
             {loading ? "Registering..." : "Create Account"}
           </button>
         </form>
@@ -416,12 +225,23 @@ const RegisterForm = () => {
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-semibold text-indigo-600 hover:underline"
+            className="font-semibold text-orange-500 hover:text-orange-600 hover:underline transition-colors"
           >
             Sign In
           </Link>
         </p>
       </div>
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+          from { opacity: 0; transform: scale(0.7); }
+          to { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 };

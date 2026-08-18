@@ -7,6 +7,7 @@ import { loginUser, clearError } from "../../redux/slices/authSlice";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -15,18 +16,10 @@ const Login = () => {
     (state) => state.auth || {},
   );
 
-  // ==============================
-  // Authentication Redirect
-  // ==============================
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
+    if (isAuthenticated) navigate("/");
   }, [isAuthenticated, navigate]);
 
-  // ==============================
-  // Error Toast
-  // ==============================
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -34,9 +27,6 @@ const Login = () => {
     }
   }, [error, dispatch]);
 
-  // ==============================
-  // Login Submit
-  // ==============================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -46,39 +36,36 @@ const Login = () => {
     }
 
     try {
-      await dispatch(
-        loginUser({
-          email,
-          password,
-        }),
-      ).unwrap();
-
+      await dispatch(loginUser({ email, password })).unwrap();
       toast.success("Login Successful!");
       navigate("/");
-    } catch (error) {
-      console.log("Login failed:", error);
+    } catch (err) {
+      console.log("Login failed:", err);
     }
   };
 
-  // ==============================
-  // Google OAuth
-  // ==============================
   const handleGoogleLogin = () => {
     sessionStorage.setItem("googleLogin", "true");
-
     window.location.href = "http://localhost:8000/api/v1/auth/google";
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[85vh] bg-slate-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-slate-100">
-        {/* Heading */}
-        <h2 className="text-3xl font-bold text-center text-slate-900 mb-2">
+    <div className="flex items-center justify-center min-h-[85vh] bg-gradient-to-br from-orange-50 via-white to-slate-50 px-4 py-10">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-orange-100 animate-[fadeUp_0.5s_ease-out]">
+        {/* Logo mark */}
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-2xl shadow-lg shadow-orange-200 animate-[popIn_0.5s_ease-out]">
+            🛍️
+          </div>
+        </div>
+
+        <h2 className="text-3xl font-extrabold text-center text-slate-900 mb-1">
           Welcome Back
         </h2>
 
         <p className="text-center text-slate-500 mb-6 text-sm">
-          Please enter your details to sign in
+          Sign in to continue to{" "}
+          <span className="text-orange-500 font-semibold">Shopzy</span>
         </p>
 
         {/* Login Form */}
@@ -88,14 +75,13 @@ const Login = () => {
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Email Address
             </label>
-
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 outline-none transition-all duration-200 text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             />
           </div>
 
@@ -105,31 +91,42 @@ const Login = () => {
               <label className="block text-sm font-medium text-slate-700">
                 Password
               </label>
-
               <Link
                 to="/password/forgot"
-                className="text-xs text-indigo-600 hover:underline"
+                className="text-xs text-orange-500 hover:text-orange-600 hover:underline transition-colors"
               >
                 Forgot Password?
               </Link>
             </div>
 
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-300 outline-none transition-all duration-200 text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors text-sm"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
 
           {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition duration-200 text-sm shadow-md disabled:bg-indigo-400"
+            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-2.5 rounded-xl transition-all duration-200 text-sm shadow-md shadow-orange-200 hover:shadow-lg hover:shadow-orange-300 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
           >
+            {loading && (
+              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            )}
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
@@ -139,7 +136,6 @@ const Login = () => {
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-slate-200"></div>
           </div>
-
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-white px-3 text-slate-400 font-medium">
               Or continue with
@@ -151,7 +147,7 @@ const Login = () => {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 rounded-lg py-2.5 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.99] transition duration-150 shadow-sm"
+          className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-semibold text-slate-700 hover:border-orange-300 hover:bg-orange-50/50 hover:shadow-md active:scale-[0.98] transition-all duration-200"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -179,12 +175,23 @@ const Login = () => {
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="font-semibold text-indigo-600 hover:underline"
+            className="font-semibold text-orange-500 hover:text-orange-600 hover:underline transition-colors"
           >
             Sign Up
           </Link>
         </p>
       </div>
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+          from { opacity: 0; transform: scale(0.7); }
+          to { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 };
