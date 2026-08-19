@@ -8,8 +8,14 @@ const Products = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const { products = [], loading, error, productCount, totalPages, currentPage } =
-    useSelector((state) => state.product);
+  const {
+    products = [],
+    loading,
+    error,
+    productCount,
+    totalPages,
+    currentPage,
+  } = useSelector((state) => state.product);
 
   const urlKeyword = searchParams.get("keyword") || "";
   const urlCategory = searchParams.get("category") || "";
@@ -188,7 +194,9 @@ const Products = () => {
                   onChange={() => handleCategoryChange("")}
                   className="w-4 h-4 accent-orange-500 cursor-pointer"
                 />
-                <span className={`text-sm transition-colors ${category === "" ? "font-semibold text-orange-600" : "text-slate-600 group-hover:text-slate-900"}`}>
+                <span
+                  className={`text-sm transition-colors ${category === "" ? "font-semibold text-orange-600" : "text-slate-600 group-hover:text-slate-900"}`}
+                >
                   All Categories
                 </span>
               </label>
@@ -206,7 +214,9 @@ const Products = () => {
                     onChange={() => handleCategoryChange(item)}
                     className="w-4 h-4 accent-orange-500 cursor-pointer"
                   />
-                  <span className={`text-sm transition-colors ${category === item ? "font-semibold text-orange-600" : "text-slate-600 group-hover:text-slate-900"}`}>
+                  <span
+                    className={`text-sm transition-colors ${category === item ? "font-semibold text-orange-600" : "text-slate-600 group-hover:text-slate-900"}`}
+                  >
                     {item}
                   </span>
                 </label>
@@ -232,7 +242,9 @@ const Products = () => {
                     onChange={() => setRating(String(value))}
                     className="w-4 h-4 accent-orange-500 cursor-pointer"
                   />
-                  <span className={`text-sm transition-colors ${rating === String(value) ? "font-semibold text-orange-600" : "text-slate-600 group-hover:text-slate-900"}`}>
+                  <span
+                    className={`text-sm transition-colors ${rating === String(value) ? "font-semibold text-orange-600" : "text-slate-600 group-hover:text-slate-900"}`}
+                  >
                     {value}★ & above
                   </span>
                 </label>
@@ -300,7 +312,8 @@ const Products = () => {
                   No Products Found
                 </h2>
                 <p className="mt-2 text-sm text-slate-500 max-w-xs mx-auto">
-                  We couldn't find anything matching your filters. Try adjusting search options.
+                  We couldn't find anything matching your filters. Try adjusting
+                  search options.
                 </p>
                 <button
                   onClick={handleClearFilters}
@@ -381,7 +394,7 @@ const Products = () => {
 
                   {Array.from(
                     { length: totalPages },
-                    (_, index) => index + 1
+                    (_, index) => index + 1,
                   ).map((page) => (
                     <button
                       key={page}

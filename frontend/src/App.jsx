@@ -90,13 +90,13 @@ useEffect(() => {
         <Routes>
           {/* ================= PUBLIC ROUTES ================= */}
 
-          <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home />} />
 
-          <Route path="/products" element={<Products />} />
+            <Route path="/products" element={<Products />} />
 
-          <Route path="/product/:id" element={<ProductDetails />} />
+            <Route path="/products/:id" element={<ProductDetails />} />
 
-          <Route path="/cart" element={<Cart />} />
+            <Route path="/cart" element={<Cart />} />
 
           {/* ================= AUTH ROUTES ================= */}
 
