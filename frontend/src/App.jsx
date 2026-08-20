@@ -69,13 +69,57 @@ useEffect(() => {
 }, [isAuthenticated, user]);
 
   // 4. Loader screen jab tak session check ho raha hai
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+if (loading) {
+  return (
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
+
+      {/* Ambient glow blobs */}
+      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl animate-[pulse_3s_ease-in-out_infinite]"></div>
+      <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-[pulse_3s_ease-in-out_infinite_1s]"></div>
+
+      <div className="relative flex flex-col items-center">
+
+        {/* Logo badge with spinning ring */}
+        <div className="relative w-24 h-24 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-500 animate-spin"></div>
+
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-2xl shadow-lg shadow-orange-900/50 animate-[pulse_2s_ease-in-out_infinite]">
+            🛍️
+          </div>
+        </div>
+
+        {/* Brand name */}
+        <h1 className="mt-6 text-2xl font-extrabold text-white tracking-tight">
+          Shopzy<span className="text-orange-500">.</span>
+        </h1>
+
+        {/* Status text + animated dots */}
+        <p className="mt-2 text-sm text-slate-400 flex items-center gap-1">
+          Syncing your experience
+          <span className="flex gap-0.5">
+            <span className="w-1 h-1 rounded-full bg-orange-500 animate-[bounce_1s_infinite_0ms]"></span>
+            <span className="w-1 h-1 rounded-full bg-orange-500 animate-[bounce_1s_infinite_150ms]"></span>
+            <span className="w-1 h-1 rounded-full bg-orange-500 animate-[bounce_1s_infinite_300ms]"></span>
+          </span>
+        </p>
+
+        {/* Progress bar */}
+        <div className="mt-6 w-48 h-1 rounded-full bg-slate-800 overflow-hidden">
+          <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 animate-[loadingBar_1.4s_ease-in-out_infinite]"></div>
+        </div>
       </div>
-    );
-  }
+
+      <style>{`
+        @keyframes loadingBar {
+          0% { transform: translateX(-100%); }
+          50% { transform: translateX(150%); }
+          100% { transform: translateX(150%); }
+        }
+      `}</style>
+    </div>
+  );
+}
 
   return (
     <Router>
