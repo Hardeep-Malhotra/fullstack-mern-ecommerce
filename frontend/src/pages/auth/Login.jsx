@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { loginUser, clearError } from "../../redux/slices/authSlice";
@@ -11,14 +11,20 @@ const Login = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Dynamic redirect path based on previous location state (e.g., /shipping)
+  const redirectPath = location.state?.from || "/";
 
   const { loading, isAuthenticated, error } = useSelector(
     (state) => state.auth || {},
   );
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/");
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) {
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, navigate, redirectPath]);
 
   useEffect(() => {
     if (error) {
@@ -38,7 +44,7 @@ const Login = () => {
     try {
       await dispatch(loginUser({ email, password })).unwrap();
       toast.success("Login Successful!");
-      navigate("/");
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.log("Login failed:", err);
     }
@@ -170,11 +176,12 @@ const Login = () => {
           Sign in with Google
         </button>
 
-        {/* Register */}
+        {/* Register Link preserving state */}
         <p className="text-center text-sm text-slate-600 mt-6">
           Don't have an account?{" "}
           <Link
             to="/register"
+            state={{ from: redirectPath }}
             className="font-semibold text-orange-500 hover:text-orange-600 hover:underline transition-colors"
           >
             Sign Up

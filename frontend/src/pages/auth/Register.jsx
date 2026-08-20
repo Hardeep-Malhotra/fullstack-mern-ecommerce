@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { registerUser, clearError } from "../../redux/slices/authSlice";
@@ -12,6 +12,10 @@ const RegisterForm = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Dynamic redirect path preserved from location state
+  const redirectPath = location.state?.from || "/";
 
   const { loading, isAuthenticated, error } = useSelector(
     (state) => state.auth || {},
@@ -25,8 +29,10 @@ const RegisterForm = () => {
   }, [error, dispatch]);
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/");
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) {
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, navigate, redirectPath]);
 
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -52,7 +58,7 @@ const RegisterForm = () => {
     try {
       await dispatch(registerUser(user)).unwrap();
       toast.success("Account Created Successfully!");
-      navigate("/");
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.log("Registration failed:", err);
     }
@@ -220,11 +226,12 @@ const RegisterForm = () => {
           </button>
         </form>
 
-        {/* Login Link */}
+        {/* Login Link preserving state */}
         <p className="text-center text-sm text-slate-600 mt-6">
           Already have an account?{" "}
           <Link
             to="/login"
+            state={{ from: redirectPath }}
             className="font-semibold text-orange-500 hover:text-orange-600 hover:underline transition-colors"
           >
             Sign In
