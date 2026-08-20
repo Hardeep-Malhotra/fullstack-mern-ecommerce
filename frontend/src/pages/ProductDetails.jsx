@@ -1,13 +1,18 @@
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
-import { getProductDetails, clearProduct } from "../redux/slices/productSlice";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
-// Cloudinary URL ko dynamically Maximum Quality (HD/2K) URL banane ka function
+import {
+  getProductDetails,
+  clearProduct,
+} from "../redux/slices/productSlice";
+import { addItemToCart } from "../redux/slices/cartSlice";
+
+// Cloudinary URL ko dynamically High Quality (HD) URL banane ka function
 const getHighResImage = (url) => {
   if (!url) return "/placeholder.png";
   if (url.includes("cloudinary.com")) {
-    // Quality 100 & Width 2000 for sharp crisp details on zoom
     return url.replace("/upload/", "/upload/w_2000,q_100,f_auto/");
   }
   return url;
@@ -15,33 +20,41 @@ const getHighResImage = (url) => {
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // ==========================================
+  // REDUX STATE
+  // ==========================================
   const { product, productLoading, productError } = useSelector(
-    (state) => state.product,
+    (state) => state.product
   );
 
+  const { loading: cartLoading, error: cartError } = useSelector(
+    (state) => state.cart
+  );
+
+  // ==========================================
+  // LOCAL STATES
+  // ==========================================
+  const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [prevId, setPrevId] = useState(id);
 
-  // ==========================================
-  // RESET SELECTED IMAGE WHEN PRODUCT ID CHANGES
-  // (Render phase state adjustment to avoid cascading renders)
-  // ==========================================
-  if (id !== prevId) {
-    setPrevId(id);
-    setSelectedImage(0);
-  }
-
-  // ==========================================
-  // ZOOM STATE
-  // ==========================================
+  // Zoom States
   const [isZooming, setIsZooming] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const imageRef = useRef(null);
 
+  // Route change hone par image selection aur quantity reset karna
+  if (id !== prevId) {
+    setPrevId(id);
+    setSelectedImage(0);
+    setQuantity(1);
+  }
+
   // ==========================================
-  // FETCH PRODUCT & CLEANUP ONLY
+  // FETCH PRODUCT & CLEANUP
   // ==========================================
   useEffect(() => {
     if (id) {
@@ -53,6 +66,18 @@ const ProductDetails = () => {
     };
   }, [dispatch, id]);
 
+  // ==========================================
+  // CART ERROR TOAST
+  // ==========================================
+  useEffect(() => {
+    if (cartError) {
+      toast.error(cartError);
+    }
+  }, [cartError]);
+
+  // ==========================================
+  // ZOOM HANDLERS
+  // ==========================================
   const handleMouseMove = (e) => {
     if (!imageRef.current) return;
     const rect = imageRef.current.getBoundingClientRect();
@@ -78,14 +103,78 @@ const ProductDetails = () => {
     });
   };
 
+  // ==========================================
+  // QUANTITY HANDLERS
+  // ==========================================
+  const decreaseQuantity = () => {
+    setQuantity((prev) => Math.max(1, prev - 1));
+  };
+
+  const increaseQuantity = () => {
+    setQuantity((prev) => Math.min(product?.stock || 1, prev + 1));
+  };
+
+  // ==========================================
+  // ADD TO CART HANDLER
+  // ==========================================
+  const handleAddToCart = async () => {
+    if (product.stock <= 0) {
+      toast.error("Product is out of stock");
+      return;
+    }
+
+    if (quantity > product.stock) {
+      toast.error(`Only ${product.stock} item(s) available`);
+      return;
+    }
+
+    const result = await dispatch(
+      addItemToCart({
+        id: product._id,
+        quantity,
+      })
+    );
+
+    if (addItemToCart.fulfilled.match(result)) {
+      toast.success("Product added to cart 🛒");
+    }
+  };
+
+  // ==========================================
+  // BUY NOW HANDLER
+  // ==========================================
+  const handleBuyNow = async () => {
+    if (product.stock <= 0) {
+      toast.error("Product is out of stock");
+      return;
+    }
+
+    const result = await dispatch(
+      addItemToCart({
+        id: product._id,
+        quantity,
+      })
+    );
+
+    if (addItemToCart.fulfilled.match(result)) {
+      navigate("/cart");
+    }
+  };
+
+  // ==========================================
+  // LOADING STATE
+  // ==========================================
   if (productLoading) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent" />
       </div>
     );
   }
 
+  // ==========================================
+  // ERROR STATE
+  // ==========================================
   if (productError) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">
@@ -110,11 +199,12 @@ const ProductDetails = () => {
     images[selectedImage]?.url || images[0]?.url || "/placeholder.png";
   const hdImage = getHighResImage(currentImage);
 
+  // ==========================================
+  // MAIN UI
+  // ==========================================
   return (
-    <div
-      key={id}
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10"
-    >
+    <div key={id} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      
       {/* BREADCRUMB */}
       <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 mb-6 sm:mb-8">
         <Link to="/" className="hover:text-orange-500">
@@ -130,9 +220,10 @@ const ProductDetails = () => {
         </span>
       </div>
 
-      {/* PRODUCT GRID */}
+      {/* PRODUCT MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        {/* LEFT - IMAGES WITH CONTROLLED ZOOM */}
+        
+        {/* LEFT - IMAGES WITH ADVANCED ZOOM */}
         <div className="relative">
           <div
             ref={imageRef}
@@ -152,7 +243,7 @@ const ProductDetails = () => {
               }`}
             />
 
-            {/* DESKTOP OVERLAY LENS */}
+            {/* DESKTOP LENS OVERLAY */}
             {isZooming && (
               <div
                 className="hidden lg:block absolute w-32 h-32 border-2 border-orange-500/80 bg-orange-500/10 pointer-events-none rounded-lg shadow-md"
@@ -231,6 +322,7 @@ const ProductDetails = () => {
             {product.name}
           </h1>
 
+          {/* RATING */}
           <div className="flex items-center gap-3 mt-3">
             <div className="flex items-center gap-1 bg-green-600 text-white px-2.5 py-0.5 rounded-md text-xs sm:text-sm font-semibold">
               ⭐ {product.ratings || 0}
@@ -240,12 +332,14 @@ const ProductDetails = () => {
             </span>
           </div>
 
+          {/* PRICE */}
           <div className="mt-5 sm:mt-6">
             <span className="text-3xl sm:text-4xl font-black text-slate-900">
-              ₹{product.price?.toLocaleString("en-IN")}
+              ₹{Number(product.price).toLocaleString("en-IN")}
             </span>
           </div>
 
+          {/* STOCK STATUS */}
           <div className="mt-4">
             {product.stock > 0 ? (
               <p className="text-green-600 font-semibold text-sm sm:text-base">
@@ -261,6 +355,7 @@ const ProductDetails = () => {
             )}
           </div>
 
+          {/* DESCRIPTION */}
           <div className="mt-6 border-t border-slate-200 pt-5">
             <h2 className="text-base sm:text-lg font-bold text-slate-900">
               Description
@@ -270,35 +365,47 @@ const ProductDetails = () => {
             </p>
           </div>
 
+          {/* QUANTITY CONTROLLER */}
           {product.stock > 0 && (
             <div className="mt-6">
               <p className="text-xs sm:text-sm font-semibold text-slate-800 mb-2">
                 Quantity
               </p>
               <div className="flex items-center border border-slate-300 rounded-xl w-fit overflow-hidden bg-slate-50">
-                <button className="w-10 h-10 text-lg font-bold hover:bg-slate-200 transition">
+                <button
+                  onClick={decreaseQuantity}
+                  disabled={quantity <= 1}
+                  className="w-10 h-10 text-lg font-bold hover:bg-slate-200 transition disabled:opacity-40"
+                >
                   −
                 </button>
                 <span className="w-12 text-center font-bold text-slate-800">
-                  1
+                  {quantity}
                 </span>
-                <button className="w-10 h-10 text-lg font-bold hover:bg-slate-200 transition">
+                <button
+                  onClick={increaseQuantity}
+                  disabled={quantity >= product.stock}
+                  className="w-10 h-10 text-lg font-bold hover:bg-slate-200 transition disabled:opacity-40"
+                >
                   +
                 </button>
               </div>
             </div>
           )}
 
+          {/* ACTION BUTTONS */}
           <div className="flex flex-col sm:flex-row gap-3 mt-8">
             <button
-              disabled={product.stock <= 0}
+              onClick={handleAddToCart}
+              disabled={product.stock <= 0 || cartLoading}
               className="flex-1 py-3.5 rounded-xl border-2 border-orange-500 text-orange-500 font-bold hover:bg-orange-50 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              🛒 Add to Cart
+              {cartLoading ? "Adding..." : "🛒 Add to Cart"}
             </button>
 
             <button
-              disabled={product.stock <= 0}
+              onClick={handleBuyNow}
+              disabled={product.stock <= 0 || cartLoading}
               className="flex-1 py-3.5 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition active:scale-[0.98] shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Buy Now
@@ -311,6 +418,7 @@ const ProductDetails = () => {
         </div>
       </div>
 
+      {/* BOTTOM METRICS PANEL */}
       <div className="mt-12 sm:mt-16 border-t border-slate-200 pt-8 sm:pt-10">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
           Product Information
