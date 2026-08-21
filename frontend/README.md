@@ -225,7 +225,7 @@ This prevents duplication and allows common components to remain consistent acro
 
 ### ❌ 404 Handling
 
-A reusable NotFound component handles invalid URLs.
+A reusable NotFound component handles invalid URLs
 ```
 Unknown URL
     ↓
