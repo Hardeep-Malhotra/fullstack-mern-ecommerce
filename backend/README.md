@@ -3977,3 +3977,597 @@ These enhancements demonstrate practical understanding of production backend con
 ## ✅ Final Result
 
 The NexusCart Order Management system now provides a more **reliable, consistent, auditable, and production-oriented** order processing architecture.
+
+---
+<div align="center">
+
+# 💳 Razorpay Payment Integration
+### Shopzy — MERN Stack E-Commerce Platform
+
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev)
+[![Razorpay](https://img.shields.io/badge/Razorpay-02042B?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com)
+
+**A production-grade, secure payment pipeline — from cart to confirmed order.**
+
+`Cart` → `Shipping` → `Confirm Order` → `Payment` → `Razorpay Checkout` → `Signature Verification` → `Order Creation` → `Stock Deduction` → `Cart Clear` → `My Orders`
+
+> 🧪 Currently running in **Razorpay Test Mode** — zero real money moves during development or demos.
+
+</div>
+
+---
+
+## 📌 Table of Contents
+
+<table>
+<tr>
+<td valign="top" width="33%">
+
+- [Overview](#-overview)
+- [Why This Architecture](#-why-this-architecture)
+- [Payment Flow](#-payment-flow)
+- [System Architecture](#-system-architecture)
+- [Step-by-Step Walkthrough](#-step-by-step-walkthrough)
+
+</td>
+<td valign="top" width="33%">
+
+- [Signature Verification](#-signature-verification)
+- [Order Creation & Stock Safety](#-order-creation--stock-safety)
+- [Duplicate Order Protection](#-duplicate-order-protection)
+- [API Reference](#-api-reference)
+- [Security Layers](#-security-layers)
+
+</td>
+<td valign="top" width="33%">
+
+- [Test Mode & Test Cards](#-test-mode--test-cards)
+- [Environment Variables](#-environment-variables)
+- [Folder Structure](#-backend-folder-structure)
+- [Testing Checklist](#-testing-checklist)
+- [Production Checklist](#-production-considerations)
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🔥 Overview
+
+Shopzy uses **Razorpay** as its payment gateway — but the frontend is never trusted to decide whether a payment succeeded. Every rupee is verified server-side before an order is ever written to the database.
+
+```mermaid
+flowchart LR
+    A[Frontend] --> B[Backend]
+    B --> C[Razorpay Order]
+    C --> D[Razorpay Checkout]
+    D --> E[Test Payment]
+    E --> F[Payment Response]
+    F --> G[Backend Signature Check]
+    G --> H[(MongoDB Order)]
+    H --> I[Cart Cleared]
+    I --> J[My Orders]
+
+    style G fill:#f97316,color:#fff
+    style H fill:#10b981,color:#fff
+```
+
+---
+
+## 🎯 Why This Architecture?
+
+| Concern | How it's solved |
+|---|---|
+| **Fake "success" claims from a tampered client** | Backend independently verifies the Razorpay signature (HMAC SHA256) before doing anything |
+| **Price manipulation from devtools** | Backend re-fetches product prices from MongoDB — frontend price is never trusted |
+| **Overselling out-of-stock items** | Stock is checked *and* atomically decremented inside a transaction |
+| **Duplicate orders from double clicks / retries** | Frontend `useRef` lock + backend payment-ID idempotency check |
+| **Losing the cart on a failed payment** | Cart is cleared **only** after the order is successfully written to MongoDB |
+
+---
+
+## 🔄 Payment Flow
+
+```mermaid
+flowchart TD
+    Cart([🛒 Cart]) --> Shipping([📦 Shipping])
+    Shipping --> Confirm([✅ Confirm Order])
+    Confirm --> Payment([💳 Payment.jsx])
+    Payment -->|POST /payment/create-order| Backend1[Backend: Create Razorpay Order]
+    Backend1 --> Checkout([Razorpay Checkout])
+    Checkout --> Success{Payment Result}
+    Success -->|✅ Success| Response[Razorpay Response]
+    Success -->|❌ Failure| Stop[Stop — Cart Preserved]
+    Response --> Verify[POST /payment/verify]
+    Verify --> HMAC{HMAC SHA256 Match?}
+    HMAC -->|Valid| OrderNew[POST /order/new]
+    HMAC -->|Invalid| Reject[❌ Reject Payment]
+    OrderNew --> Txn[(MongoDB Transaction)]
+    Txn --> ClearCart[Clear Cart]
+    ClearCart --> MyOrders([🎉 My Orders])
+
+    style HMAC fill:#f97316,color:#fff
+    style Txn fill:#10b981,color:#fff
+    style MyOrders fill:#f97316,color:#fff
+```
+
+---
+
+## 🏗 System Architecture
+
+```mermaid
+flowchart TB
+    subgraph FE["🎨 FRONTEND — Payment.jsx"]
+        F1[Create Payment Order]
+        F2[Razorpay Checkout]
+        F3[Success Handler]
+        F4[Failure Handler]
+        F5[Clear Cart]
+    end
+
+    subgraph BE["⚙️ BACKEND"]
+        B1["Routes: /payment/create-order, /payment/verify"]
+        B2["Controllers: createRazorpayOrder, verifyPayment"]
+        B3["Order Controller: createOrder"]
+    end
+
+    subgraph EXT["☁️ EXTERNAL"]
+        R[(Razorpay Test Gateway)]
+        M[(MongoDB — orders)]
+    end
+
+    FE -- HTTP Requests --> BE
+    BE --> R
+    BE --> M
+```
+
+---
+
+## 🧩 Step-by-Step Walkthrough
+
+<details>
+<summary><b>Step 1–3 — Cart → Shipping → Payment Page</b></summary>
+
+<br>
+
+The user adds a product (name, price, quantity, image, ID) → enters shipping details (address, city, state, PIN, phone) → lands on `/payment`, where the frontend already knows the cart items, shipping info, total amount, and logged-in user.
+
+</details>
+
+<details>
+<summary><b>Step 4–8 — Backend creates the Razorpay order</b></summary>
+
+<br>
+
+**Request:**
+```json
+POST /api/v1/payment/create-order
+{ "amount": 1299 }
+```
+
+Backend validates the amount, converts ₹ → paise (`Math.round(amount * 100)`), and creates the order:
+
+```js
+const options = {
+  amount: Math.round(Number(amount) * 100),
+  currency: "INR",
+  receipt: `receipt_${Date.now()}`,
+  notes: { userId: req.user?._id?.toString() || "" },
+};
+
+const order = await razorpay.orders.create(options);
+```
+
+**Response back to frontend:**
+```json
+{
+  "success": true,
+  "order": { "id": "order_xxxxx", "amount": 129900, "currency": "INR" },
+  "key": "rzp_test_xxxxx"
+}
+```
+
+</details>
+
+<details>
+<summary><b>Step 9–11 — Razorpay Checkout opens & test payment runs</b></summary>
+
+<br>
+
+```js
+const razorpay = new window.Razorpay(options);
+razorpay.open();
+```
+
+Since the project runs on `rzp_test_XXXXXXXX`, the payment is fully simulated — the developer can trigger either a **Success** or **Failure** outcome from Razorpay's test UI. On success, Razorpay returns:
+
+```
+razorpay_order_id:   order_TSjZFhDYct06Pz
+razorpay_payment_id: pay_TSoKTTfiaAAF3G
+razorpay_signature:  xxxxxxxxxxxxxxxx
+```
+
+</details>
+
+---
+
+## 🔐 Signature Verification
+
+> **Golden rule:** the frontend never gets to say "payment successful" and directly create an order. The backend independently proves it.
+
+```mermaid
+flowchart LR
+    A[Razorpay Response] --> B["Backend generates its own signature<br/>HMAC-SHA256(order_id + '|' + payment_id)"]
+    B --> C{Matches razorpay_signature?}
+    C -->|❌ No| D[400 — Reject Payment]
+    C -->|✅ Yes| E[Continue → Create Order]
+
+    style C fill:#f97316,color:#fff
+    style E fill:#10b981,color:#fff
+```
+
+```js
+const generatedSignature = crypto
+  .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+  .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+  .digest("hex");
+
+if (generatedSignature !== razorpay_signature) {
+  return next(new ErrorHandler("Payment verification failed. Invalid signature.", 400));
+}
+```
+
+A malicious client could tamper with a frontend request — but it can never forge a valid HMAC signature without `RAZORPAY_KEY_SECRET`, which lives only on the server.
+
+---
+
+## 🛒 Order Creation & Stock Safety
+
+Once the signature is verified, `POST /api/v1/order/new` builds the real order — but it **never trusts prices from the frontend**:
+
+```js
+const dbProduct = await Product.findById(item.product);
+calculatedItemsPrice += dbProduct.price * item.quantity;
+```
+
+**Stock is checked before committing:**
+```js
+if (dbProduct.stock < item.quantity) {
+  // reject — insufficient stock
+}
+```
+
+**And decremented atomically to prevent race conditions:**
+```js
+Product.findOneAndUpdate(
+  { _id: item.product, stock: { $gte: item.quantity } },
+  { $inc: { stock: -item.quantity } }
+);
+```
+
+Order creation + stock deduction both run inside a **MongoDB transaction** (`session.startTransaction()`) — if either step fails, everything rolls back together.
+
+<details>
+<summary><b>📄 Example order document written to MongoDB</b></summary>
+
+```json
+{
+  "shippingInfo": {
+    "address": "#1347 MangatPura, Ramlila Bhawan",
+    "city": "Yamuna Nagar",
+    "state": "Haryana",
+    "country": "India",
+    "pinCode": "135001",
+    "phoneNo": "8950516966"
+  },
+  "orderItems": [
+    { "name": "Premium Oversized Cotton T-Shirt", "price": 1299, "quantity": 1, "product": "PRODUCT_ID" }
+  ],
+  "paymentInfo": { "id": "pay_xxxxx", "status": "PAID" },
+  "paidAt": "2026-08-22T12:11:33.761Z",
+  "itemsPrice": 1299,
+  "taxPrice": 0,
+  "shippingPrice": 0,
+  "totalPrice": 1299,
+  "orderStatus": "Processing",
+  "isDeleted": false
+}
+```
+
+</details>
+
+Only **after** the order is successfully created does the frontend clear the cart:
+
+```js
+dispatch(clearCart());
+navigate("/orders", { replace: true });
+```
+
+---
+
+## 🛡 Duplicate Order Protection
+
+Protection exists at **two layers**:
+
+```mermaid
+flowchart LR
+    subgraph Frontend
+        A["useRef lock<br/>isProcessingRef.current"]
+    end
+    subgraph Backend
+        B["Search MongoDB by<br/>Razorpay Payment ID"]
+    end
+    A --> C{Already processing?}
+    C -->|Yes| D[Ignore duplicate call]
+    C -->|No| B
+    B --> E{Payment ID already used?}
+    E -->|Yes| F[❌ Block duplicate order]
+    E -->|No| G[✅ Create order]
+```
+
+> ⚠️ Duplicate protection is keyed on **Payment ID**, not user/product/address — so the same user buying the same product twice with two different payments creates **two perfectly valid orders**. Multiple products in one cart also correctly collapse into **one order** with multiple `orderItems`.
+
+---
+
+## ❌ Failure & Cancellation Handling
+
+| Scenario | Order Created? | Cart Cleared? | User Can Retry? |
+|---|:---:|:---:|:---:|
+| ✅ Payment succeeds + signature valid | ✅ Yes | ✅ Yes | — |
+| ❌ Payment fails (`payment.failed` event) | ❌ No | ❌ No | ✅ Yes |
+| 🚪 User closes the Razorpay modal | ❌ No | ❌ No | ✅ Yes |
+| 🔁 Signature mismatch | ❌ No | ❌ No | ✅ Yes |
+
+---
+
+## 🧪 Test Mode & Test Cards
+
+<div align="center">
+
+| Field | Value |
+|---|---|
+| **Card Number** | `4100 2800 0000 1007` |
+| **CVV** | Any 3 digits |
+| **Expiry** | Any future date |
+| **API Key** | `rzp_test_XXXXXXXX` |
+
+</div>
+
+> Test Mode + Test Card = fully simulated flow, **zero real money**. More official test cards are available in [Razorpay's documentation](https://razorpay.com/docs/payments/payments/test-card-details/).
+
+---
+
+## 🔗 API Reference
+
+### `POST /api/v1/payment/create-order`
+🔒 Auth required
+
+<table>
+<tr><td width="50%">
+
+**Request**
+```json
+{ "amount": 1299 }
+```
+
+</td><td width="50%">
+
+**Response**
+```json
+{
+  "success": true,
+  "order": {
+    "id": "order_xxxxx",
+    "amount": 129900,
+    "currency": "INR"
+  },
+  "key": "rzp_test_xxxxx"
+}
+```
+
+</td></tr>
+</table>
+
+### `POST /api/v1/payment/verify`
+🔒 Auth required
+
+<table>
+<tr><td width="50%">
+
+**Request**
+```json
+{
+  "razorpay_order_id": "order_xxxxx",
+  "razorpay_payment_id": "pay_xxxxx",
+  "razorpay_signature": "xxxxxxxx"
+}
+```
+
+</td><td width="50%">
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "Payment verified successfully",
+  "paymentInfo": {
+    "id": "pay_xxxxx",
+    "orderId": "order_xxxxx",
+    "status": "PAID"
+  }
+}
+```
+
+</td></tr>
+</table>
+
+### `POST /api/v1/order/new`
+🔒 Auth required — validates stock → fetches DB prices → calculates total → creates order → deducts stock → commits transaction.
+
+---
+
+## 🔐 Security Layers
+
+| # | Layer | Implementation |
+|---|---|---|
+| 1 | Authentication | `isAuthenticatedUser` middleware on every payment route |
+| 2 | Signature Verification | HMAC SHA256 comparison, server-side only |
+| 3 | Secret Protection | `RAZORPAY_KEY_SECRET` never leaves the backend |
+| 4 | Price Verification | Prices re-fetched from MongoDB, never trusted from client |
+| 5 | Stock Verification | Checked before any order is created |
+| 6 | Atomic Stock Update | `$inc` with a `stock >= quantity` guard condition |
+| 7 | MongoDB Transaction | Order + stock update succeed or roll back together |
+| 8 | Duplicate Payment Protection | Same Razorpay Payment ID can't create two orders |
+| 9 | Frontend Processing Lock | `useRef` guard against double-fire async handlers |
+
+---
+
+## ⚙️ Environment Variables
+
+```bash
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxx
+```
+
+> ⚠️ **Never** send `RAZORPAY_KEY_SECRET` to the frontend — only `RAZORPAY_KEY_ID` is safe to expose. Never commit `.env` — always add it to `.gitignore`.
+
+---
+
+## 📁 Backend Folder Structure
+
+```
+backend/
+├── config/
+│   ├── cloudinary.js
+│   ├── db.js
+│   └── passport.js
+├── controllers/
+│   ├── authController/
+│   ├── orderController/
+│   │   ├── createOrderController.js
+│   │   ├── cancelOrderController.js
+│   │   ├── deleteOrderController.js
+│   │   ├── getAllOrdersController.js
+│   │   ├── getMyOrdersController.js
+│   │   ├── getSingleOrderController.js
+│   │   └── updateOrderStatusController.js
+│   ├── productController/
+│   └── paymentController/
+│       ├── createRazorpayOrderController.js
+│       └── verifyPaymentController.js
+├── middlewares/
+├── models/
+│   ├── orderModel.js
+│   ├── productModel.js
+│   └── userModel.js
+├── routes/
+│   ├── authRoutes.js
+│   ├── orderRoutes.js
+│   ├── productRoutes.js
+│   └── paymentRoutes.js
+├── validators/
+├── utils/
+├── app.js
+└── server.js
+```
+
+---
+
+## 🧾 Test Mode vs Production
+
+| Feature | Test Mode | Production |
+|---|---|---|
+| API Key | `rzp_test_...` | Live key |
+| Money | No real money | Real money |
+| Payment | Simulated | Real |
+| Test Cards | Supported | Not usable |
+| KYC | Not required | Required |
+| Purpose | Development | Real customers |
+
+---
+
+## ✅ Testing Checklist
+
+<details>
+<summary><b>Successful Payment</b></summary>
+
+- [x] Login
+- [x] Add product to cart
+- [x] Fill shipping information
+- [x] Confirm order
+- [x] Razorpay Checkout opens
+- [x] Test payment succeeds
+- [x] Signature verified
+- [x] MongoDB order created (status `PAID` / `Processing`)
+- [x] Stock decreases
+- [x] Cart clears
+- [x] Redirect to My Orders
+
+</details>
+
+<details>
+<summary><b>Failed / Cancelled Payment</b></summary>
+
+- [x] Checkout opens, payment fails → error shown, no order, cart preserved
+- [x] User closes modal → payment cancelled, no order, cart preserved
+
+</details>
+
+<details>
+<summary><b>Duplicate & Multi-Order Protection</b></summary>
+
+- [x] Same payment callback fired twice → only one order created
+- [x] Same user, same product, different payment → new valid order allowed
+- [x] Multiple products in one cart → one order, multiple `orderItems`
+
+</details>
+
+---
+
+## 🚀 Production Considerations
+
+Before switching `rzp_test_...` → a live key:
+
+- [ ] Razorpay account activation + KYC completion
+- [ ] Production API credentials
+- [ ] Webhook handling for async payment events
+- [ ] Refund handling
+- [ ] Payment reconciliation
+- [ ] Stronger idempotency strategy
+- [ ] Production monitoring & alerting
+- [ ] Secure environment configuration
+
+> Test Mode does not automatically enable real payments — going live is a deliberate, separate step.
+
+---
+
+## 🏆 Key Takeaways
+
+1. Frontend **never** decides payment validity.
+2. Backend creates the Razorpay order.
+3. Razorpay Checkout handles the payment UI.
+4. Backend independently verifies the Razorpay signature.
+5. Only verified payments create the final order.
+6. Product price and stock are always re-verified from MongoDB.
+7. Order + stock updates run inside a single transaction.
+8. Cart is cleared **only** after a successful order write.
+9. Duplicate Payment IDs are blocked — but the same user can place unlimited legitimate orders.
+10. Multiple products collapse into **one** order.
+11. `RAZORPAY_KEY_SECRET` never leaves the backend.
+
+---
+
+<div align="center">
+
+### 🎉 Conclusion
+
+Shopzy now runs a complete, verifiable Razorpay payment pipeline in Test Mode —
+a solid, secure foundation ready to scale toward production.
+
+**Cart → Shipping → Payment → Razorpay → Signature Verification → Order Creation → Stock Update → Cart Clear → My Orders**
+
+</div>
