@@ -1,5 +1,5 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/ErrorHandler.js";
+import ErrorHandler from "../../utils/errorHandler.js";
 import Order from "../../models/orderModel.js";
 import Product from "../../models/productModel.js";
 // Cancel Order (User) -> PUT /api/v1/order/cancel/:id

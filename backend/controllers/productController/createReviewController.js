@@ -1,5 +1,5 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../middlewares/error.js";
+import ErrorHandler from "../../utils/errorHandler.js";
 import Product from "../../models/productModel.js";
 
 // @desc    Create or Update Product Review

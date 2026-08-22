@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/ErrorHandler.js";
+import ErrorHandler from "../../utils/errorHandler.js";
 
 // ==========================================================
 // VERIFY RAZORPAY PAYMENT

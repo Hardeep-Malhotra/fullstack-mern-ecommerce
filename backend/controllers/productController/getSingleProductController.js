@@ -1,6 +1,6 @@
 import Product from "../../models/productModel.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/ErrorHandler.js";
+import ErrorHandler from "../../utils/errorHandler.js";
 
 // @desc    Get single product details
 // @route   GET /api/v1/product/:id

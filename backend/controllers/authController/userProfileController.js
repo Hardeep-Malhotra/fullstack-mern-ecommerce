@@ -1,5 +1,5 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../middlewares/error.js";
+import ErrorHandler from "../../utils/errorHandler.js";
 import User from "../../models/userModel.js";
 
 // @desc    Get Currently Logged-in User Profile
