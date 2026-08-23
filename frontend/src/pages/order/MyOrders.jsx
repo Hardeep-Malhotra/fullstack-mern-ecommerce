@@ -36,9 +36,7 @@ const MyOrders = () => {
       } catch (err) {
         if (isMounted) {
           console.error("FETCH ORDERS ERROR:", err);
-          setError(
-            err.response?.data?.message || "Failed to load your orders.",
-          );
+          setError(err.response?.data?.message || "Failed to load your orders.");
         }
       } finally {
         if (isMounted) {
@@ -54,7 +52,6 @@ const MyOrders = () => {
     };
   }, []);
 
-  // Helper for Order Status Badge
   const renderStatusBadge = (status) => {
     switch (status) {
       case "Delivered":
@@ -86,9 +83,9 @@ const MyOrders = () => {
   // ==============================
   if (loading) {
     return (
-      <div className="min-h-[75vh] flex flex-col items-center justify-center bg-gray-50/50">
+      <div className="min-h-[75vh] flex flex-col items-center justify-center bg-gradient-to-br from-orange-50/30 via-gray-50 to-gray-50">
         <div className="relative flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-orange-100 border-t-orange-500 rounded-full animate-spin"></div>
         </div>
         <p className="text-sm font-semibold text-gray-600 mt-4 animate-pulse">
           Fetching your order history...
@@ -102,7 +99,7 @@ const MyOrders = () => {
   // ==============================
   if (error) {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center bg-gray-50/50 p-4">
+      <div className="min-h-[75vh] flex items-center justify-center bg-gradient-to-br from-orange-50/30 via-gray-50 to-gray-50 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -111,15 +108,11 @@ const MyOrders = () => {
           <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-6 h-6 stroke-[2]" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900">
-            Something Went Wrong
-          </h2>
-          <p className="text-xs text-gray-500 mt-1 mb-6 leading-relaxed">
-            {error}
-          </p>
+          <h2 className="text-lg font-bold text-gray-900">Something Went Wrong</h2>
+          <p className="text-xs text-gray-500 mt-1 mb-6 leading-relaxed">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="w-full py-2.5 bg-gray-900 text-white text-xs font-semibold rounded-xl hover:bg-black transition-all shadow-xs flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold rounded-xl hover:shadow-lg hover:shadow-orange-200 transition-all duration-200 flex items-center justify-center gap-2"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Try Again
@@ -134,25 +127,23 @@ const MyOrders = () => {
   // ==============================
   if (orders.length === 0) {
     return (
-      <div className="min-h-[75vh] flex flex-col items-center justify-center bg-gray-50/50 p-4">
+      <div className="min-h-[75vh] flex flex-col items-center justify-center bg-gradient-to-br from-orange-50/30 via-gray-50 to-gray-50 p-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center p-8 bg-white rounded-3xl shadow-sm border border-gray-100 max-w-md w-full"
         >
-          <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-orange-200">
             <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
           </div>
-          <h2 className="text-xl font-extrabold text-gray-900">
-            No Orders Yet
-          </h2>
+          <h2 className="text-xl font-extrabold text-gray-900">No Orders Yet</h2>
           <p className="text-xs text-gray-500 mt-1.5 mb-6 leading-relaxed">
             Looks like you haven't placed any orders yet. Start exploring our
             catalogue and find something you love!
           </p>
           <button
             onClick={() => navigate("/")}
-            className="w-full py-3 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+            className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold rounded-xl hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5 transition-all duration-200"
           >
             Start Shopping
           </button>
@@ -165,7 +156,7 @@ const MyOrders = () => {
   // MAIN ORDERS LIST
   // ==============================
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100/60 py-10 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50/30 via-gray-50 to-gray-100/60 py-10 px-4 sm:px-6 lg:px-8 font-sans">
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -181,9 +172,8 @@ const MyOrders = () => {
               Track, view details, and manage your recent purchases
             </p>
           </div>
-          <div className="bg-white border border-gray-200/80 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-600 shadow-xs self-start sm:self-auto">
-            Total Orders:{" "}
-            <span className="font-bold text-gray-900">{orders.length}</span>
+          <div className="bg-white border border-orange-200/70 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-600 shadow-xs self-start sm:self-auto">
+            Total Orders: <span className="font-bold text-orange-600">{orders.length}</span>
           </div>
         </div>
 
@@ -195,12 +185,12 @@ const MyOrders = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.04 }}
-              className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-all duration-200 overflow-hidden"
+              className="bg-white rounded-2xl border border-gray-100 shadow-xs hover:shadow-md hover:border-orange-100 transition-all duration-200 overflow-hidden"
             >
               {/* CARD TOP INFO BAR */}
-              <div className="bg-gray-50/70 border-b border-gray-100 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+              <div className="bg-orange-50/40 border-b border-gray-100 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-gray-200/80 flex items-center justify-center text-gray-600 shadow-2xs">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-orange-200/70 flex items-center justify-center text-orange-500 shadow-2xs">
                     <Package className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div>
@@ -220,10 +210,11 @@ const MyOrders = () => {
                     </p>
                     <p className="text-xs font-medium text-gray-700">
                       {order.createdAt
-                        ? new Date(order.createdAt).toLocaleDateString(
-                            "en-IN",
-                            { day: "numeric", month: "short", year: "numeric" },
-                          )
+                        ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
                         : "N/A"}
                     </p>
                   </div>
@@ -252,9 +243,7 @@ const MyOrders = () => {
                       <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                         <span>
                           Qty:{" "}
-                          <strong className="text-gray-700 font-medium">
-                            {item.quantity}
-                          </strong>
+                          <strong className="text-gray-700 font-medium">{item.quantity}</strong>
                         </span>
                         <span>•</span>
                         <span>
@@ -286,7 +275,7 @@ const MyOrders = () => {
                   <span className="text-gray-300">|</span>
                   <div>
                     <span className="text-gray-400">Total Amount: </span>
-                    <span className="font-extrabold text-gray-900 text-base">
+                    <span className="font-extrabold text-orange-600 text-base">
                       ₹{order.totalPrice?.toLocaleString("en-IN")}
                     </span>
                   </div>
@@ -296,7 +285,7 @@ const MyOrders = () => {
                   whileHover={{ x: 2 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate(`/order/${order._id}`)}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition-all shadow-xs"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg hover:shadow-orange-200 text-white text-xs font-semibold rounded-xl transition-all duration-200"
                 >
                   View Full Details
                   <ChevronRight className="w-4 h-4 stroke-[2]" />
