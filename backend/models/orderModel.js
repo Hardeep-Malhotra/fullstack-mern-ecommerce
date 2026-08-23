@@ -34,7 +34,7 @@ const statusHistorySchema = new mongoose.Schema(
       required: true,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const orderSchema = new mongoose.Schema(
@@ -68,6 +68,26 @@ const orderSchema = new mongoose.Schema(
       enum: ["Processing", "Shipped", "Delivered", "Cancelled"],
       default: "Processing",
     },
+    orderStatus: {
+      type: String,
+      required: true,
+      enum: ["Processing", "Shipped", "Delivered", "Cancelled"],
+      default: "Processing",
+    },
+
+    cancelReason: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    cancelComment: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    statusHistory: [statusHistorySchema],
     // 👈 Status tracking audit history array
     statusHistory: [statusHistorySchema],
     deliveredAt: Date,
