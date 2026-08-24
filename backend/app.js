@@ -11,6 +11,7 @@ import productRoutes from "./routes/productRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import errorMiddleware from "./middlewares/error.js";
 
 const app = express();
@@ -61,10 +62,16 @@ app.use(passport.initialize());
 // ==============================
 // Routes
 // ==============================
+
 app.use("/api/v1", productRoutes);
+
 app.use("/api/v1/auth", authRoutes);
+
 app.use("/api/v1", orderRoutes);
+
 app.use("/api/v1/payment", paymentRoutes);
+
+app.use("/api/v1/admin", adminRoutes);
 
 // ==============================
 // Error Middleware

@@ -84,24 +84,5 @@ router.put(
   updateUserProfile,
 );
 
-// ==========================================
-// ADMIN ROUTES
-// ==========================================
-router.get(
-  "/admin/users",
-  isAuthenticatedUser,
-  authorizeRoles("admin"),
-  getAllUsers,
-);
-
-router
-  .route("/admin/user/:id")
-  .get(isAuthenticatedUser, authorizeRoles("admin"), getSingleUser)
-  .put(
-    isAuthenticatedUser,
-    authorizeRoles("admin"),
-    validateBody(updateUserRoleSchema),
-    updateUserRole,
-  )
-  .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
+  
 export default router;
