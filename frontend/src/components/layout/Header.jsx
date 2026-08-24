@@ -50,7 +50,10 @@ const Header = () => {
   // ==========================================
   const cartCount = useSelector(
     (state) =>
-      state.cart?.cartItems?.reduce((total, item) => total + item.quantity, 0) || 0
+      state.cart?.cartItems?.reduce(
+        (total, item) => total + item.quantity,
+        0,
+      ) || 0,
   );
   const wishlistCount = 0;
 
@@ -98,11 +101,13 @@ const Header = () => {
     }
   };
 
+  if (location.pathname.startsWith("/admin")) {
+    return null;
+  }
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-[78px] flex items-center justify-between gap-4">
-          
           {/* LEFT GROUP */}
           <div className="flex items-center gap-3 min-w-0">
             {/* Mobile Menu Toggle */}
