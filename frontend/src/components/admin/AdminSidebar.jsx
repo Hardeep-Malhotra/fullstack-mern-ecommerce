@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   ChevronRight,
   Store,
+  Activity
 } from "lucide-react";
 
 const AdminSidebar = () => {
@@ -16,6 +17,7 @@ const AdminSidebar = () => {
     { path: "/admin/products", label: "Products", icon: Package },
     { path: "/admin/orders", label: "Orders", icon: ShoppingCart },
     { path: "/admin/users", label: "Users", icon: Users },
+      { path: "/admin/system-health", label: "System Health", icon: Activity },
   ];
 
   return (

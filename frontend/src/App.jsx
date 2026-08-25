@@ -38,6 +38,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
+import SystemHealth from "./pages/admin/SystemHealth";
 
 // Route Guard
 import ProtectedRoute from "./components/route/ProtectedRoute";
@@ -188,6 +189,7 @@ function App() {
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/orders" element={<AdminOrders />} />
               <Route path="/admin/orders/:id" element={<AdminOrderDetails />} />
+              <Route path="/admin/system-health" element={<SystemHealth />} />
             </Route>
           </Route>
           {/* ================= 404 ROUTE ================= */}
