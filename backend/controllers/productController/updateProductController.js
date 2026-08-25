@@ -11,7 +11,9 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
   if (!product) {
     return next(new ErrorHandler("Product not found with this ID", 404));
   }
-
+if (req.body.name && req.body.name.length > 100) {
+    req.body.name = req.body.name.substring(0, 100);
+  }
   // Step 2: Update Product
   // { new: true } -> Updated document return karega
   // { runValidators: true } -> Schema validation update time par bhi execute karega

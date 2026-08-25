@@ -1,145 +1,15 @@
-// import express from "express";
-
-// // Middlewares
-// import { validateBody } from "../middlewares/validate.js";
-// import { isAuthenticatedUser, authorizeRoles } from "../middlewares/auth.js";
-// import upload from "../middlewares/upload.js";
-
-// // Validators
-// import {
-//   createProductSchema,
-//   createReviewSchema,
-// } from "../validators/productValidator.js";
-
-// import { updateProductSchema } from "../validators/updateProductValidator.js";
-
-// // Controllers
-// import { getAllProducts } from "../controllers/productController/getAllProductsController.js";
-// import { getSingleProduct } from "../controllers/productController/getSingleProductController.js";
-// import { createProducts } from "../controllers/productController/createProductController.js";
-// import { deleteProduct } from "../controllers/productController/deleteProductController.js";
-// import { updateProduct } from "../controllers/productController/updateProductController.js";
-// import { getAdminProducts } from "../controllers/productController/getAdminProductsController.js";
-// import { getProductReviews } from "../controllers/productController/getReviewsController.js";
-// import { createProductReview } from "../controllers/productController/createReviewController.js";
-// import { deleteReview } from "../controllers/productController/deleteReviewController.js";
-
-// const router = express.Router();
-
-// // =====================================================
-// // 1. ALL PRODUCTS & CREATE PRODUCT
-// // =====================================================
-
-// router
-//   .route("/products")
-
-//   // Public
-//   .get(getAllProducts)
-
-//   // Admin Only
-//   .post(
-//     isAuthenticatedUser,
-//     authorizeRoles("admin"),
-
-//     // Receive product images
-//     upload.array("images", 5),
-
-//     // Validate normal product fields
-//     validateBody(createProductSchema),
-
-//     // Create product + upload images to Cloudinary
-//     createProducts
-//   );
-
-// // =====================================================
-// // 2. ADMIN DASHBOARD PRODUCTS
-// // =====================================================
-
-// router
-//   .route("/admin/products")
-//   .get(
-//     isAuthenticatedUser,
-//     authorizeRoles("admin"),
-//     getAdminProducts
-//   );
-
-// // =====================================================
-// // 3. CREATE PRODUCT REVIEW
-// // =====================================================
-
-// router
-//   .route("/products/review")
-//   .put(
-//     isAuthenticatedUser,
-//     validateBody(createReviewSchema),
-//     createProductReview
-//   );
-
-// // =====================================================
-// // 4. GET / DELETE PRODUCT REVIEWS
-// // =====================================================
-
-// router
-//   .route("/products/reviews")
-//   .get(getProductReviews)
-//   .delete(
-//     isAuthenticatedUser,
-//     deleteReview
-//   );
-
-// // =====================================================
-// // 5. SINGLE PRODUCT
-// // =====================================================
-
-// router
-//   .route("/products/:id")
-
-//   // Public
-//   .get(getSingleProduct)
-
-//   // Admin Only
-//   .put(
-//     isAuthenticatedUser,
-//     authorizeRoles("admin"),
-//     upload.array("images", 5),
-//     validateBody(updateProductSchema),
-//     updateProduct
-//   )
-
-//   // Admin Only
-//   .delete(
-//     isAuthenticatedUser,
-//     authorizeRoles("admin"),
-//     deleteProduct
-//   );
-
-// export default router;
-
-
-
 import express from "express";
 
 // Middlewares
 import { validateBody } from "../middlewares/validate.js";
-import { isAuthenticatedUser, authorizeRoles } from "../middlewares/auth.js";
-import upload from "../middlewares/upload.js";
-import ErrorHandler from "../utils/errorHandler.js";
+import { isAuthenticatedUser } from "../middlewares/auth.js";
 
 // Validators
-import {
-  createProductSchema,
-  createReviewSchema,
-} from "../validators/productValidator.js";
-
-import { updateProductSchema } from "../validators/updateProductValidator.js";
+import { createReviewSchema } from "../validators/productValidator.js";
 
 // Controllers
 import { getAllProducts } from "../controllers/productController/getAllProductsController.js";
 import { getSingleProduct } from "../controllers/productController/getSingleProductController.js";
-import { createProducts } from "../controllers/productController/createProductController.js";
-import { deleteProduct } from "../controllers/productController/deleteProductController.js";
-import { updateProduct } from "../controllers/productController/updateProductController.js";
-import { getAdminProducts } from "../controllers/productController/getAdminProductsController.js";
 import { getProductReviews } from "../controllers/productController/getReviewsController.js";
 import { createProductReview } from "../controllers/productController/createReviewController.js";
 import { deleteReview } from "../controllers/productController/deleteReviewController.js";
@@ -147,68 +17,29 @@ import { deleteReview } from "../controllers/productController/deleteReviewContr
 const router = express.Router();
 
 // =====================================================
-// MULTER ERROR CATCHER WRAPPER
-// =====================================================
-const handleImageUpload = (req, res, next) => {
-  const uploadArray = upload.array("images", 5);
-
-  uploadArray(req, res, (err) => {
-    if (err) {
-      // Agar multer me invalid file format ya koi upload error aaye
-      return next(new ErrorHandler(err.message || "File upload failed", 400));
-    }
-    next();
-  });
-};
-
-// =====================================================
-// 1. ALL PRODUCTS & CREATE PRODUCT
+// 1. ALL PRODUCTS
 // =====================================================
 
-router
-  .route("/products")
-
-  // Public
-  .get(getAllProducts)
-
-  // Admin Only
-  .post(
-    isAuthenticatedUser,
-    authorizeRoles("admin"),
-
-    // Safely Receive product images
-    handleImageUpload,
-
-    // Validate normal product fields
-    validateBody(createProductSchema),
-
-    // Create product + upload images to Cloudinary
-    createProducts
-  );
+// Public
+router.get("/products", getAllProducts);
 
 // =====================================================
-// 2. ADMIN DASHBOARD PRODUCTS
+// 2. SINGLE PRODUCT
 // =====================================================
 
-router
-  .route("/admin/products")
-  .get(
-    isAuthenticatedUser,
-    authorizeRoles("admin"),
-    getAdminProducts
-  );
+// Public
+router.get("/products/:id", getSingleProduct);
 
 // =====================================================
 // 3. CREATE PRODUCT REVIEW
 // =====================================================
 
-router
-  .route("/products/review")
-  .put(
-    isAuthenticatedUser,
-    validateBody(createReviewSchema),
-    createProductReview
-  );
+router.put(
+  "/products/review",
+  isAuthenticatedUser,
+  validateBody(createReviewSchema),
+  createProductReview,
+);
 
 // =====================================================
 // 4. GET / DELETE PRODUCT REVIEWS
@@ -217,35 +48,6 @@ router
 router
   .route("/products/reviews")
   .get(getProductReviews)
-  .delete(
-    isAuthenticatedUser,
-    deleteReview
-  );
-
-// =====================================================
-// 5. SINGLE PRODUCT
-// =====================================================
-
-router
-  .route("/products/:id")
-
-  // Public
-  .get(getSingleProduct)
-
-  // Admin Only
-  .put(
-    isAuthenticatedUser,
-    authorizeRoles("admin"),
-    handleImageUpload,
-    validateBody(updateProductSchema),
-    updateProduct
-  )
-
-  // Admin Only
-  .delete(
-    isAuthenticatedUser,
-    authorizeRoles("admin"),
-    deleteProduct
-  );
+  .delete(isAuthenticatedUser, deleteReview);
 
 export default router;

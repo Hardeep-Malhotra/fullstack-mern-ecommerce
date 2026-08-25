@@ -5,6 +5,7 @@ import asyncHandler from "../../middlewares/asyncHandler.js";
 import cloudinary from "../../config/cloudinary.js";
 
 export const createProducts = asyncHandler(async (req, res) => {
+
   // ==============================
   // Check images
   // ==============================
