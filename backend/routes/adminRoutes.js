@@ -6,7 +6,7 @@ import {
   updateUserRole,
   deleteUser,
 } from "../controllers/authController/userProfileController.js";
-
+import { getSystemHealth } from "../controllers/healthController.js";
 import { isAuthenticatedUser, authorizeRoles } from "../middlewares/auth.js";
 
 import { validateBody } from "../middlewares/validate.js";
@@ -32,4 +32,7 @@ router
   )
   .delete(isAuthenticatedUser, authorizeRoles("admin"), deleteUser);
 
+router
+  .route("/admin/system-health")
+  .get(isAuthenticatedUser, authorizeRoles("admin"), getSystemHealth);
 export default router;
