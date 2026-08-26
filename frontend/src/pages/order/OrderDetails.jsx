@@ -16,10 +16,18 @@ import {
 } from "lucide-react";
 
 import axiosInstance from "../../api/axios";
-
 import Loader from "../../components/common/Loader";
 import OrderStatus from "../../components/order/OrderStatus";
 import OrderTimeline from "../../components/order/OrderTimeline";
+
+const CANCEL_REASONS = [
+  "I ordered by mistake",
+  "I found a better price elsewhere",
+  "Need to change shipping address",
+  "Want to change ordered item/color",
+  "Delivery estimate time is too long",
+  "Other reason",
+];
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -38,25 +46,23 @@ const OrderDetails = () => {
     const getOrderData = async () => {
       try {
         const { data } = await axiosInstance.get(`/order/${id}`);
-
         if (isMounted && data.success) {
           setOrder(data.order);
         }
       } catch (error) {
         if (isMounted) {
           console.error("FETCH ORDER DETAILS ERROR:", error);
-          toast.error(error?.response?.data?.message || "Failed to load order details");
+          toast.error(
+            error?.response?.data?.message || "Failed to load order details",
+          );
           navigate("/orders");
         }
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
 
     getOrderData();
-
     return () => {
       isMounted = false;
     };
@@ -131,10 +137,9 @@ const OrderDetails = () => {
     );
   }
 
-  const canCancel =
-    order.orderStatus !== "Delivered" &&
-    order.orderStatus !== "Shipped" &&
-    order.orderStatus !== "Cancelled";
+  const canCancel = !["Delivered", "Shipped", "Cancelled"].includes(
+    order.orderStatus,
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50/30 via-gray-50 to-gray-100/60 py-8 px-4 sm:px-6 lg:px-8 font-sans">
@@ -154,11 +159,9 @@ const OrderDetails = () => {
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
               Back to My Orders
             </button>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                Order Details
-              </h1>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+              Order Details
+            </h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-1.5">
               <span>Order ID:</span>
               <span className="font-mono font-medium text-gray-800 bg-gray-200/60 px-2 py-0.5 rounded text-xs">
@@ -172,15 +175,17 @@ const OrderDetails = () => {
           </div>
         </div>
 
-        {/* MAIN GRID */}
+        {/* MAIN CONTENT GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* LEFT SIDE */}
+          {/* LEFT COLUMN */}
           <div className="lg:col-span-2 space-y-6">
             {/* ORDERED ITEMS */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md hover:border-orange-100">
               <div className="flex items-center gap-2 mb-5">
                 <Package className="w-5 h-5 text-orange-500" />
-                <h2 className="text-lg font-bold text-gray-900">Ordered Items</h2>
+                <h2 className="text-lg font-bold text-gray-900">
+                  Ordered Items
+                </h2>
               </div>
 
               <div className="divide-y divide-gray-100">
@@ -203,7 +208,10 @@ const OrderDetails = () => {
                         {item.name}
                       </h3>
                       <p className="text-xs text-gray-500 mt-1">
-                        Quantity: <span className="font-medium text-gray-700">{item.quantity}</span>
+                        Quantity:{" "}
+                        <span className="font-medium text-gray-700">
+                          {item.quantity}
+                        </span>
                       </p>
                       <p className="text-xs text-gray-500">
                         Unit Price: ₹{item.price?.toLocaleString("en-IN")}
@@ -220,34 +228,44 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            {/* SHIPPING INFO */}
+            {/* SHIPPING DETAILS */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md hover:border-orange-100">
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="w-5 h-5 text-orange-500" />
-                <h2 className="text-lg font-bold text-gray-900">Shipping Details</h2>
+                <h2 className="text-lg font-bold text-gray-900">
+                  Shipping Details
+                </h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-orange-50/40 p-4 rounded-xl border border-orange-100/60">
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">Street Address</p>
+                  <p className="text-xs text-gray-400 font-medium">
+                    Street Address
+                  </p>
                   <p className="font-semibold text-gray-800 mt-0.5">
                     {order.shippingInfo?.address}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">City & State</p>
+                  <p className="text-xs text-gray-400 font-medium">
+                    City & State
+                  </p>
                   <p className="font-semibold text-gray-800 mt-0.5">
                     {order.shippingInfo?.city}, {order.shippingInfo?.state}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">Pincode & Country</p>
+                  <p className="text-xs text-gray-400 font-medium">
+                    Pincode & Country
+                  </p>
                   <p className="font-semibold text-gray-800 mt-0.5">
                     {order.shippingInfo?.pinCode}, {order.shippingInfo?.country}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 font-medium">Contact Phone</p>
+                  <p className="text-xs text-gray-400 font-medium">
+                    Contact Phone
+                  </p>
                   <p className="font-semibold text-gray-800 mt-0.5">
                     {order.shippingInfo?.phoneNo}
                   </p>
@@ -255,19 +273,21 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            {/* TIMELINE */}
+            {/* ORDER TIMELINE */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md hover:border-orange-100">
               <div className="flex items-center gap-2 mb-5">
                 <Clock className="w-5 h-5 text-orange-500" />
-                <h2 className="text-lg font-bold text-gray-900">Order Progress</h2>
+                <h2 className="text-lg font-bold text-gray-900">
+                  Order Progress
+                </h2>
               </div>
               <OrderTimeline statusHistory={order.statusHistory || []} />
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT COLUMN */}
           <div className="space-y-6">
-            {/* PRICE SUMMARY */}
+            {/* PRICE BREAKUP */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md hover:border-orange-100">
               <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">
                 Price Breakup
@@ -290,7 +310,9 @@ const OrderDetails = () => {
                   <span>Shipping Fee</span>
                   <span className="font-medium text-gray-900">
                     {order.shippingPrice === 0 ? (
-                      <span className="text-emerald-600 font-semibold">FREE</span>
+                      <span className="text-emerald-600 font-semibold">
+                        FREE
+                      </span>
                     ) : (
                       `₹${order.shippingPrice?.toLocaleString("en-IN")}`
                     )}
@@ -298,7 +320,9 @@ const OrderDetails = () => {
                 </div>
 
                 <div className="border-t border-gray-100 pt-3 mt-3 flex justify-between items-center">
-                  <span className="font-bold text-gray-900 text-base">Grand Total</span>
+                  <span className="font-bold text-gray-900 text-base">
+                    Grand Total
+                  </span>
                   <span className="font-extrabold text-orange-600 text-xl">
                     ₹{order.totalPrice?.toLocaleString("en-IN")}
                   </span>
@@ -306,11 +330,13 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            {/* PAYMENT INFORMATION */}
+            {/* PAYMENT STATUS */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md hover:border-orange-100">
               <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
                 <CreditCard className="w-5 h-5 text-orange-500" />
-                <h2 className="text-lg font-bold text-gray-900">Payment Status</h2>
+                <h2 className="text-lg font-bold text-gray-900">
+                  Payment Status
+                </h2>
               </div>
 
               <div className="space-y-3 text-sm">
@@ -342,7 +368,7 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            {/* ACTION / STATUS MESSAGES */}
+            {/* STATUS ACTION CARDS */}
             {canCancel && (
               <div className="bg-white rounded-2xl shadow-sm border border-red-100 p-5 bg-gradient-to-b from-white to-red-50/20">
                 <div className="flex items-center gap-2 text-red-600 mb-1">
@@ -350,7 +376,8 @@ const OrderDetails = () => {
                   <h3 className="font-bold text-sm">Need to cancel?</h3>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  You can request immediate cancellation before order gets shipped.
+                  You can request immediate cancellation before order gets
+                  shipped.
                 </p>
 
                 <motion.button
@@ -369,15 +396,13 @@ const OrderDetails = () => {
               <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-5">
                 <div className="flex items-center gap-2 text-amber-800 mb-1">
                   <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <h3 className="font-bold text-sm">Cancellation Unavailable</h3>
+                  <h3 className="font-bold text-sm">
+                    Cancellation Unavailable
+                  </h3>
                 </div>
                 <p className="text-xs text-amber-700 leading-relaxed">
-                  This order has already been handed over to our courier partner and is on its way.
-                  Direct cancellation is no longer available.
-                </p>
-                <p className="text-xs font-medium text-amber-900 mt-2">
-                  Need help? You can reject the delivery at your doorstep or initiate a return after
-                  receiving the package.
+                  This order has already been handed over to our courier
+                  partner. Direct cancellation is no longer available.
                 </p>
               </div>
             )}
@@ -389,8 +414,7 @@ const OrderDetails = () => {
                   <h3 className="font-bold text-sm">Order Delivered</h3>
                 </div>
                 <p className="text-xs text-orange-700 leading-relaxed">
-                  This item has been successfully delivered. If you faced any issues with the order,
-                  you can request a return or replacement via support.
+                  This item has been successfully delivered.
                 </p>
               </div>
             )}
@@ -398,9 +422,12 @@ const OrderDetails = () => {
             {order.orderStatus === "Cancelled" && (
               <div className="bg-red-50/80 border border-red-200 rounded-2xl p-5 text-center">
                 <ShieldCheck className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                <h3 className="font-bold text-red-800 text-sm">Order Cancelled</h3>
+                <h3 className="font-bold text-red-800 text-sm">
+                  Order Cancelled
+                </h3>
                 <p className="text-xs text-red-600 mt-1">
-                  This order was cancelled. Refund (if applicable) will be processed automatically.
+                  This order was cancelled. Refund will be processed
+                  automatically if applicable.
                 </p>
               </div>
             )}
@@ -408,7 +435,7 @@ const OrderDetails = () => {
         </div>
       </motion.div>
 
-      {/* CANCEL MODAL */}
+      {/* CANCELLATION MODAL */}
       <AnimatePresence>
         {showCancelModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -428,7 +455,9 @@ const OrderDetails = () => {
               className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 z-10 overflow-hidden"
             >
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900">Cancel Order</h2>
+                <h2 className="text-lg font-bold text-gray-900">
+                  Cancel Order
+                </h2>
                 <button
                   onClick={handleCloseCancelModal}
                   disabled={cancelLoading}
@@ -443,14 +472,7 @@ const OrderDetails = () => {
               </p>
 
               <div className="mt-4 space-y-2 max-h-60 overflow-y-auto pr-1">
-                {[
-                  "I ordered by mistake",
-                  "I found a better price elsewhere",
-                  "Need to change shipping address",
-                  "Want to change ordered item/color",
-                  "Delivery estimate time is too long",
-                  "Other reason",
-                ].map((reason) => (
+                {CANCEL_REASONS.map((reason) => (
                   <label
                     key={reason}
                     className={`flex items-center gap-3 p-3 rounded-xl border text-sm cursor-pointer transition-all ${
