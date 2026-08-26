@@ -39,6 +39,7 @@ import { createProducts } from "../controllers/productController/createProductCo
 import { updateProduct } from "../controllers/productController/updateProductController.js";
 import { deleteProduct } from "../controllers/productController/deleteProductController.js";
 import { getAdminProducts } from "../controllers/productController/getAdminProductsController.js";
+import { getAdminDashboardStats } from "../controllers/orderController/getAdminDashboardStats.js";
 
 // =====================================================
 // OTHER CONTROLLERS
@@ -59,12 +60,7 @@ const handleImageUpload = (req, res, next) => {
     if (err) {
       console.error("MULTER ERROR:", err);
 
-      return next(
-        new ErrorHandler(
-          err.message || "File upload failed",
-          400
-        )
-      );
+      return next(new ErrorHandler(err.message || "File upload failed", 400));
     }
 
     console.log("MULTER FILES:", req.files);
@@ -73,7 +69,16 @@ const handleImageUpload = (req, res, next) => {
     next();
   });
 };
+// =====================================================
+// ADMIN DASHBOARD ROUTES
+// =====================================================
 
+router.get(
+  "/dashboard",
+  isAuthenticatedUser,
+  authorizeRoles("admin"),
+  getAdminDashboardStats,
+);
 // =====================================================
 // ADMIN PRODUCT ROUTES
 // =====================================================
