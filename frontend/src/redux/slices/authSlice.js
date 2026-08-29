@@ -21,11 +21,10 @@ export const loginUser = createAsyncThunk(
       console.log("LOGIN ERROR:", error.response?.data);
 
       return rejectWithValue(
-        error.response?.data?.message ||
-          "Login failed. Please try again."
+        error.response?.data?.message || "Login failed. Please try again.",
       );
     }
-  }
+  },
 );
 
 // ======================================================
@@ -37,29 +36,20 @@ export const registerUser = createAsyncThunk(
 
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await API.post(
-        "/auth/register",
-        userData
-      );
+      const response = await API.post("/auth/register", userData);
 
       return response.data;
     } catch (error) {
-      console.log(
-        "REGISTER STATUS:",
-        error.response?.status
-      );
+      console.log("REGISTER STATUS:", error.response?.status);
 
-      console.log(
-        "REGISTER ERROR:",
-        error.response?.data
-      );
+      console.log("REGISTER ERROR:", error.response?.data);
 
       return rejectWithValue(
         error.response?.data?.message ||
-          "Registration failed. Please try again."
+          "Registration failed. Please try again.",
       );
     }
-  }
+  },
 );
 
 // ======================================================
@@ -71,31 +61,21 @@ export const forgotPassword = createAsyncThunk(
 
   async ({ email }, { rejectWithValue }) => {
     try {
-      const response = await API.post(
-        "/auth/password/forgot",
-        {
-          email,
-        }
-      );
+      const response = await API.post("/auth/password/forgot", {
+        email,
+      });
 
       return response.data;
     } catch (error) {
-      console.log(
-        "FORGOT PASSWORD STATUS:",
-        error.response?.status
-      );
+      console.log("FORGOT PASSWORD STATUS:", error.response?.status);
 
-      console.log(
-        "FORGOT PASSWORD ERROR:",
-        error.response?.data
-      );
+      console.log("FORGOT PASSWORD ERROR:", error.response?.data);
 
       return rejectWithValue(
-        error.response?.data?.message ||
-          "Failed to send reset link."
+        error.response?.data?.message || "Failed to send reset link.",
       );
     }
-  }
+  },
 );
 
 // ======================================================
@@ -105,34 +85,24 @@ export const forgotPassword = createAsyncThunk(
 export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
 
-  async (
-    { token, passwords },
-    { rejectWithValue }
-  ) => {
+  async ({ token, passwords }, { rejectWithValue }) => {
     try {
       const response = await API.put(
         `/auth/password/reset/${token}`,
-        passwords
+        passwords,
       );
 
       return response.data;
     } catch (error) {
-      console.log(
-        "RESET PASSWORD STATUS:",
-        error.response?.status
-      );
+      console.log("RESET PASSWORD STATUS:", error.response?.status);
 
-      console.log(
-        "RESET PASSWORD ERROR:",
-        error.response?.data
-      );
+      console.log("RESET PASSWORD ERROR:", error.response?.data);
 
       return rejectWithValue(
-        error.response?.data?.message ||
-          "Token invalid or expired."
+        error.response?.data?.message || "Token invalid or expired.",
       );
     }
-  }
+  },
 );
 
 // ======================================================
@@ -149,11 +119,10 @@ export const loadUser = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message ||
-          "Session expired."
+        error.response?.data?.message || "Session expired.",
       );
     }
-  }
+  },
 );
 
 // ======================================================
@@ -169,12 +138,9 @@ export const logoutUser = createAsyncThunk(
 
       return response.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message ||
-          "Logout failed."
-      );
+      return rejectWithValue(error.response?.data?.message || "Logout failed.");
     }
-  }
+  },
 );
 
 // ======================================================
@@ -250,22 +216,28 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ==================================================
-      // REGISTER
-      // ==================================================
-
+      // ======================================================
+      // REGISTER USER (Buyer + Seller Approval Handled)
+      // ======================================================
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
+        state.message = action.payload.message || null;
+
+        // Agar server se user object aa raha hai (Buyer flow), tabhi authenticate karo
+        if (action.payload.user) {
+          state.isAuthenticated = true;
+          state.user = action.payload.user;
+        } else {
+          // Seller flow: Only show approval message, keep user logged out
+          state.isAuthenticated = false;
+          state.user = null;
+        }
         state.error = null;
       })
-
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.isAuthenticated = false;
@@ -339,6 +311,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError } = authSlice.actions;
-
+export const { clearError, clearMessage } = authSlice.actions;
 export default authSlice.reducer;
