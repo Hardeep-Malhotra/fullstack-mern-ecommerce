@@ -55,6 +55,7 @@ import SellerOrderDetails from "./pages/seller/SellerOrderDetails";
 
 // Route Guard
 import ProtectedRoute from "./components/route/ProtectedRoute";
+import DashboardRedirect from "./components/route/DashboardRedirect";
 
 // Common
 import NotFound from "./components/common/NotFound";
@@ -231,8 +232,18 @@ function AppContent() {
           </Route>
 
           {/* =================================================
-              SELLER PROTECTED
-          ================================================= */}
+    DASHBOARD REDIRECT
+    /dashboard -> role ke according
+================================================= */}
+
+          <Route
+            path="/dashboard"
+            element={<DashboardRedirect user={user} />}
+          />
+
+          {/* =================================================
+    SELLER PROTECTED
+================================================= */}
 
           <Route
             element={
@@ -244,12 +255,16 @@ function AppContent() {
             }
           >
             <Route element={<SellerLayout />}>
+              {/* Seller Dashboard */}
               <Route path="/seller/dashboard" element={<SellerDashboard />} />
 
+              {/* Seller Products */}
               <Route path="/seller/products" element={<SellerProducts />} />
 
+              {/* Seller Orders */}
               <Route path="/seller/orders" element={<SellerOrders />} />
 
+              {/* Seller Order Details */}
               <Route
                 path="/seller/orders/:id"
                 element={<SellerOrderDetails />}
@@ -258,8 +273,8 @@ function AppContent() {
           </Route>
 
           {/* =================================================
-              ADMIN PROTECTED
-          ================================================= */}
+    ADMIN PROTECTED
+================================================= */}
 
           <Route
             element={
@@ -271,16 +286,22 @@ function AppContent() {
             }
           >
             <Route element={<AdminLayout />}>
+              {/* Admin Dashboard */}
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
+              {/* Admin Products */}
               <Route path="/admin/products" element={<AdminProducts />} />
 
+              {/* Admin Users */}
               <Route path="/admin/users" element={<AdminUsers />} />
 
+              {/* Admin Orders */}
               <Route path="/admin/orders" element={<AdminOrders />} />
 
+              {/* Admin Order Details */}
               <Route path="/admin/orders/:id" element={<AdminOrderDetails />} />
 
+              {/* System Health */}
               <Route path="/admin/system-health" element={<SystemHealth />} />
             </Route>
           </Route>

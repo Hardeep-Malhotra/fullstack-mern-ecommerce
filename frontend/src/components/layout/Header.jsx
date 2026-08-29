@@ -287,6 +287,10 @@ const Header = () => {
                         My Orders
                       </Link>
 
+                      {/* =================================================
+                              ADMIN / SELLER DASHBOARD
+                             ================================================= */}
+
                       {user?.role === "admin" && (
                         <Link
                           to="/admin/dashboard"
@@ -297,6 +301,15 @@ const Header = () => {
                         </Link>
                       )}
 
+                      {user?.role === "seller" && user?.isApproved === true && (
+                        <Link
+                          to="/seller/dashboard"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="block px-3 py-2 rounded-lg text-sm font-semibold text-orange-500 hover:bg-orange-50 transition"
+                        >
+                          Seller Dashboard
+                        </Link>
+                      )}
                       <button
                         type="button"
                         onClick={handleLogout}
