@@ -87,3 +87,23 @@ export const getAdminDashboardStats = async (req, res) => {
     });
   }
 };
+
+export const getAdminProducts = async (req, res, next) => {
+  try {
+    let query = {};
+    
+    // Agar Request Seller Kar Raha Hai, Toh Only Unke Own Products Dikhao
+    if (req.user.role === "seller") {
+      query.user = req.user._id;
+    }
+
+    const products = await Product.find(query).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      products,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
