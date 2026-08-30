@@ -1,7 +1,35 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  AlertTriangle,
+  ShoppingBag,
+  Star,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpDown,
+  SlidersHorizontal,
+  Tag,
+  IndianRupee,
+} from "lucide-react";
 import { getProducts } from "../redux/slices/productSlice";
+
+// Reusable orange-gradient icon badge — matches your existing accent style
+const IconBadge = ({ icon: Icon, size = 28 }) => (
+  <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-200">
+    <Icon size={size} />
+  </div>
+);
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: (i % 6) * 0.06, duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+  }),
+};
 
 const Products = () => {
   const dispatch = useDispatch();
@@ -111,19 +139,30 @@ const Products = () => {
   if (error) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <div className="text-center animate-fade-up">
-          <div className="text-5xl mb-3 animate-bounce">⚠️</div>
-          <h2 className="text-xl font-bold text-slate-900">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+          >
+            <IconBadge icon={AlertTriangle} />
+          </motion.div>
+          <h2 className="mt-4 text-xl font-bold text-slate-900">
             Something went wrong
           </h2>
           <p className="mt-2 text-red-500">{error}</p>
-          <button
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => fetchProducts(1)}
-            className="mt-5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium shadow-md shadow-orange-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-200"
+            className="mt-5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium shadow-md shadow-orange-200"
           >
             Try Again
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
@@ -131,7 +170,12 @@ const Products = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-up">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">
             All Products
@@ -149,13 +193,13 @@ const Products = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-slate-600 whitespace-nowrap">
-            Sort by:
+          <label className="text-sm font-medium text-slate-600 whitespace-nowrap flex items-center gap-1.5">
+            <ArrowUpDown size={14} /> Sort by:
           </label>
           <select
             value={sort}
             onChange={handleSortChange}
-            className="h-10 px-3 border border-slate-200 rounded-xl text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300 bg-white"
+            className="h-10 px-3 border border-slate-200 rounded-xl text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300 bg-white text-slate-900"
           >
             <option value="">Latest</option>
             <option value="price">Price: Low to High</option>
@@ -164,26 +208,35 @@ const Products = () => {
             <option value="-createdAt">Newest</option>
           </select>
         </div>
-      </div>
+      </motion.div>
 
       {/* MAIN CONTENT */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
         {/* SIDEBAR */}
-        <aside className="bg-white border border-slate-200/80 rounded-2xl p-5 h-fit lg:sticky lg:top-24 shadow-sm animate-fade-up">
+        <motion.aside
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+          className="bg-white border border-slate-200/80 rounded-2xl p-5 h-fit lg:sticky lg:top-24 shadow-sm"
+        >
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-slate-900">Filters</h2>
-            <button
+            <h2 className="font-bold text-slate-900 flex items-center gap-2">
+              <SlidersHorizontal size={16} className="text-orange-500" />
+              Filters
+            </h2>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={handleClearFilters}
-              className="text-xs font-semibold text-orange-500 hover:text-orange-600 active:scale-95 transition-all"
+              className="text-xs font-semibold text-orange-500 hover:text-orange-600"
             >
               Clear All
-            </button>
+            </motion.button>
           </div>
 
           {/* CATEGORY */}
           <div className="mt-6">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Category
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Tag size={12} /> Category
             </h3>
             <div className="mt-3 space-y-2">
               <label className="flex items-center gap-2.5 cursor-pointer group select-none">
@@ -226,8 +279,8 @@ const Products = () => {
 
           {/* RATING */}
           <div className="mt-7 pt-6 border-t border-slate-100">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Rating
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Star size={12} className="fill-amber-400 text-amber-400" /> Rating
             </h3>
             <div className="mt-3 space-y-2">
               {[4, 3, 2, 1].map((value) => (
@@ -243,9 +296,11 @@ const Products = () => {
                     className="w-4 h-4 accent-orange-500 cursor-pointer"
                   />
                   <span
-                    className={`text-sm transition-colors ${rating === String(value) ? "font-semibold text-orange-600" : "text-slate-600 group-hover:text-slate-900"}`}
+                    className={`text-sm flex items-center gap-1 transition-colors ${rating === String(value) ? "font-semibold text-orange-600" : "text-slate-600 group-hover:text-slate-900"}`}
                   >
-                    {value}★ & above
+                    {value}
+                    <Star size={12} className="fill-amber-400 text-amber-400" />
+                    & above
                   </span>
                 </label>
               ))}
@@ -254,8 +309,8 @@ const Products = () => {
 
           {/* PRICE RANGE */}
           <div className="mt-7 pt-6 border-t border-slate-100">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Price Range
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <IndianRupee size={12} /> Price Range
             </h3>
             <div className="mt-3 flex gap-2">
               <input
@@ -263,35 +318,39 @@ const Products = () => {
                 placeholder="Min ₹"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                className="w-full h-10 px-3 border border-slate-200 rounded-xl text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+                className="w-full h-10 px-3 border border-slate-200 rounded-xl text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 text-slate-900 placeholder:text-slate-400"
               />
               <input
                 type="number"
                 placeholder="Max ₹"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-full h-10 px-3 border border-slate-200 rounded-xl text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+                className="w-full h-10 px-3 border border-slate-200 rounded-xl text-sm outline-none transition-all duration-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 text-slate-900 placeholder:text-slate-400"
               />
             </div>
           </div>
 
           {/* APPLY BUTTON */}
-          <button
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
             onClick={handleApplyFilters}
-            className="mt-7 w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200"
+            className="mt-7 w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold shadow-md shadow-orange-500/20"
           >
             Apply Filters
-          </button>
-        </aside>
+          </motion.button>
+        </motion.aside>
 
         {/* PRODUCTS GRID / SKELETON */}
         <section>
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div
+                <motion.div
                   key={i}
-                  className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm p-4 animate-pulse"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+                  className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm p-4"
                 >
                   <div className="w-full h-56 bg-slate-200/70 rounded-xl mb-4" />
                   <div className="h-3 bg-slate-200/70 rounded w-1/3 mb-2" />
@@ -299,149 +358,152 @@ const Products = () => {
                   <div className="h-3 bg-slate-200/70 rounded w-1/4 mb-4" />
                   <div className="h-6 bg-slate-200/70 rounded w-1/2 mb-4" />
                   <div className="h-10 bg-slate-200/70 rounded-xl w-full" />
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="min-h-[400px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl animate-fade-up">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="min-h-[400px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl"
+            >
               <div className="text-center p-6">
-                <div className="text-6xl mb-4 transform hover:scale-110 transition-transform">
-                  🛍️
-                </div>
-                <h2 className="text-xl font-bold text-slate-900">
+                <IconBadge icon={ShoppingBag} />
+                <h2 className="mt-4 text-xl font-bold text-slate-900">
                   No Products Found
                 </h2>
                 <p className="mt-2 text-sm text-slate-500 max-w-xs mx-auto">
                   We couldn't find anything matching your filters. Try adjusting
                   search options.
                 </p>
-                <button
+                <motion.button
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleClearFilters}
-                  className="mt-5 px-5 py-2 rounded-xl bg-orange-100 text-orange-600 text-sm font-bold hover:bg-orange-200 transition-colors"
+                  className="mt-5 px-5 py-2 rounded-xl bg-orange-100 text-orange-600 text-sm font-bold"
                 >
                   Reset All Filters
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {products.map((product, i) => (
-                  <div
-                    key={product._id}
-                    style={{ animationDelay: `${(i % 6) * 70}ms` }}
-                    className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-orange-300/80 hover:-translate-y-1.5 transition-all duration-300 animate-fade-up fill-mode-forwards"
-                  >
-                    <div className="relative h-64 bg-slate-50/50 overflow-hidden flex items-center justify-center p-4">
-                      <img
-                        src={product.images?.[0]?.url}
-                        alt={product.name}
-                        loading="lazy"
-                        className="w-full h-full object-contain group-hover:scale-108 transition-transform duration-500 ease-out"
-                      />
-                      {product.stock <= 0 && (
-                        <span className="absolute top-3 left-3 bg-red-500/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-                          Out of Stock
-                        </span>
-                      )}
-                      {product.stock > 0 && product.stock <= 5 && (
-                        <span className="absolute top-3 left-3 bg-amber-500/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-                          Only {product.stock} left
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-5">
-                      <p className="text-xs text-orange-500 font-bold uppercase tracking-wider">
-                        {product.category}
-                      </p>
-                      <h2 className="mt-1 font-bold text-slate-800 line-clamp-2 min-h-[48px] group-hover:text-orange-600 transition-colors">
-                        {product.name}
-                      </h2>
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <span className="text-amber-400 text-sm">★</span>
-                        <span className="text-sm font-semibold text-slate-700">
-                          {product.ratings ? product.ratings.toFixed(1) : "0.0"}
-                        </span>
-                        <span className="text-xs text-slate-400 font-medium">
-                          ({product.numberOfReviews || 0})
-                        </span>
+                <AnimatePresence mode="popLayout">
+                  {products.map((product, i) => (
+                    <motion.div
+                      key={product._id}
+                      custom={i}
+                      variants={cardVariants}
+                      initial="hidden"
+                      animate="show"
+                      layout
+                      whileHover={{ y: -6 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                      className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-orange-300/80 transition-shadow duration-300"
+                    >
+                      <div className="relative h-64 bg-slate-50/50 overflow-hidden flex items-center justify-center p-4">
+                        <motion.img
+                          src={product.images?.[0]?.url}
+                          alt={product.name}
+                          loading="lazy"
+                          className="w-full h-full object-contain"
+                          whileHover={{ scale: 1.08 }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                        />
+                        {product.stock <= 0 && (
+                          <span className="absolute top-3 left-3 bg-red-500/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                            Out of Stock
+                          </span>
+                        )}
+                        {product.stock > 0 && product.stock <= 5 && (
+                          <span className="absolute top-3 left-3 bg-amber-500/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                            Only {product.stock} left
+                          </span>
+                        )}
                       </div>
-                      <p className="mt-3 text-xl font-black text-slate-900 tracking-tight">
-                        ₹{Number(product.price).toLocaleString("en-IN")}
-                      </p>
-                      <button
-                        onClick={() => navigate(`/products/${product._id}`)}
-                        className="mt-4 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-sm hover:shadow-md hover:shadow-orange-500/20 active:scale-95 transition-all duration-200"
-                      >
-                        View Product
-                      </button>
-                    </div>
-                  </div>
-                ))}
+
+                      <div className="p-5">
+                        <p className="text-xs text-orange-500 font-bold uppercase tracking-wider">
+                          {product.category}
+                        </p>
+                        <h2 className="mt-1 font-bold text-slate-800 line-clamp-2 min-h-[48px] group-hover:text-orange-600 transition-colors">
+                          {product.name}
+                        </h2>
+                        <div className="mt-2 flex items-center gap-1.5">
+                          <Star size={14} className="fill-amber-400 text-amber-400" />
+                          <span className="text-sm font-semibold text-slate-700">
+                            {product.ratings ? product.ratings.toFixed(1) : "0.0"}
+                          </span>
+                          <span className="text-xs text-slate-400 font-medium">
+                            ({product.numberOfReviews || 0})
+                          </span>
+                        </div>
+                        <p className="mt-3 text-xl font-black text-slate-900 tracking-tight">
+                          ₹{Number(product.price).toLocaleString("en-IN")}
+                        </p>
+                        <motion.button
+                          whileHover={{ y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => navigate(`/products/${product._id}`)}
+                          className="mt-4 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-sm"
+                        >
+                          View Product
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
 
               {/* PAGINATION */}
               {totalPages > 1 && (
-                <div className="mt-12 flex items-center justify-center gap-2 flex-wrap animate-fade-up">
-                  <button
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-12 flex items-center justify-center gap-2 flex-wrap"
+                >
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
                     disabled={currentPage <= 1}
                     onClick={() => handlePageChange(currentPage - 1)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-orange-400 hover:text-orange-600 active:scale-95 transition-all bg-white"
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-orange-400 hover:text-orange-600 flex items-center gap-1 bg-white"
                   >
-                    ← Previous
-                  </button>
+                    <ArrowLeft size={14} /> Previous
+                  </motion.button>
 
                   {Array.from(
                     { length: totalPages },
                     (_, index) => index + 1,
                   ).map((page) => (
-                    <button
+                    <motion.button
                       key={page}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => handlePageChange(page)}
-                      className={`w-10 h-10 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 ${
+                      className={`w-10 h-10 rounded-xl text-sm font-bold transition-colors duration-200 ${
                         currentPage === page
-                          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/30 scale-105"
+                          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/30"
                           : "border border-slate-200 text-slate-700 hover:border-orange-400 hover:text-orange-600 bg-white"
                       }`}
                     >
                       {page}
-                    </button>
+                    </motion.button>
                   ))}
 
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
                     disabled={currentPage >= totalPages}
                     onClick={() => handlePageChange(currentPage + 1)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-orange-400 hover:text-orange-600 active:scale-95 transition-all bg-white"
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-orange-400 hover:text-orange-600 flex items-center gap-1 bg-white"
                   >
-                    Next →
-                  </button>
-                </div>
+                    Next <ArrowRight size={14} />
+                  </motion.button>
+                </motion.div>
               )}
             </>
           )}
         </section>
       </div>
-
-      {/* CUSTOM ANIMATIONS */}
-      <style>{`
-        @keyframes fadeUp {
-          0% {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-up {
-          animation: fadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .fill-mode-forwards {
-          animation-fill-mode: forwards;
-        }
-      `}</style>
     </div>
   );
 };

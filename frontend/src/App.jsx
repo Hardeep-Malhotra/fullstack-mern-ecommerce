@@ -9,6 +9,8 @@ import {
 } from "react-router-dom";
 
 import { useSelector, useDispatch } from "react-redux";
+import { motion } from "framer-motion";
+import { ShoppingBag } from "lucide-react";
 
 // Redux
 import { loadUser } from "./redux/slices/authSlice";
@@ -112,33 +114,37 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
-        {/* Ambient glow */}
-        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl animate-[pulse_3s_ease-in-out_infinite]" />
+      <div className="min-h-screen bg-[#faf9f7] flex flex-col items-center justify-center relative overflow-hidden">
+        {/* Ambient glow — subtle on light bg */}
+        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-orange-300/20 rounded-full blur-3xl animate-[pulse_3s_ease-in-out_infinite]" />
 
-        <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-[pulse_3s_ease-in-out_infinite_1s]" />
+        <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-amber-300/20 rounded-full blur-3xl animate-[pulse_3s_ease-in-out_infinite_1s]" />
 
         <div className="relative flex flex-col items-center">
           {/* Logo */}
           <div className="relative w-24 h-24 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-4 border-slate-800" />
+            <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
 
-            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-500 animate-spin" />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="absolute inset-0 rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-500"
+            />
 
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-2xl shadow-lg shadow-orange-900/50">
-              🛍️
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-200">
+              <ShoppingBag size={26} />
             </div>
           </div>
 
-          <h1 className="mt-6 text-2xl font-extrabold text-white tracking-tight">
+          <h1 className="mt-6 text-2xl font-extrabold text-slate-900 tracking-tight">
             Shopzy<span className="text-orange-500">.</span>
           </h1>
 
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-slate-500">
             Syncing your experience...
           </p>
 
-          <div className="mt-6 w-48 h-1 rounded-full bg-slate-800 overflow-hidden">
+          <div className="mt-6 w-48 h-1 rounded-full bg-slate-200 overflow-hidden">
             <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 animate-[loadingBar_1.4s_ease-in-out_infinite]" />
           </div>
         </div>
@@ -163,7 +169,7 @@ function AppContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
+    <div className="flex flex-col min-h-screen bg-[#faf9f7] text-slate-900">
       {/* =====================================================
           TOASTER
       ===================================================== */}

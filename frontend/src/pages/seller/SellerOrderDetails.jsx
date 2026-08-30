@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -24,6 +23,8 @@ import {
   ShieldCheck,
   Navigation,
   Lock,
+  MessageSquare,
+  Loader2,
 } from "lucide-react";
 
 const SellerOrderDetails = () => {
@@ -33,16 +34,17 @@ const SellerOrderDetails = () => {
   // =====================================================
   // STATE
   // =====================================================
-
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [status, setStatus] = useState("Processing");
+  const [comment, setComment] = useState("");
+
   // =====================================================
   // FETCH ORDER
   // =====================================================
-
   const loadOrder = async (showRefreshToast = false) => {
     if (!id) return;
 
@@ -53,77 +55,63 @@ const SellerOrderDetails = () => {
         setLoading(true);
       }
 
-      const { data } = await axiosInstance.get(
-        `/seller/orders/${id}`
-      );
+      const { data } = await axiosInstance.get(`/seller/orders/${id}`);
 
       if (!data?.success || !data?.order) {
-        throw new Error(
-          data?.message || "Failed to fetch order details"
-        );
+        throw new Error(data?.message || "Failed to fetch order details");
       }
 
       setOrder(data.order);
+      setStatus(data.order.orderStatus || "Processing");
 
       if (showRefreshToast) {
         toast.success("Order details refreshed");
       }
     } catch (error) {
-      console.error(
-        "SELLER ORDER DETAILS ERROR:",
-        error
-      );
+      console.error("SELLER ORDER DETAILS ERROR:", error);
 
       toast.error(
         error?.response?.data?.message ||
           error?.message ||
-          "Failed to fetch order details"
+          "Failed to fetch order details",
       );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
-
   // =====================================================
-  // INITIAL LOAD
+  // INITIAL ORDER FETCH
   // =====================================================
-
   useEffect(() => {
     let ignore = false;
 
     const fetchInitialOrder = async () => {
       if (!id) {
-        setLoading(false);
+        if (!ignore) setLoading(false);
         return;
       }
 
       try {
-        const { data } = await axiosInstance.get(
-          `/seller/orders/${id}`
-        );
+        const { data } = await axiosInstance.get(`/seller/orders/${id}`);
 
         if (ignore) return;
 
         if (!data?.success || !data?.order) {
-          throw new Error(
-            data?.message ||
-              "Failed to fetch order details"
-          );
+          throw new Error(data?.message || "Failed to fetch order details");
         }
 
         setOrder(data.order);
+        setStatus(data.order.orderStatus || "Processing");
+        setComment("");
       } catch (error) {
         if (!ignore) {
-          console.error(
-            "SELLER ORDER DETAILS ERROR:",
-            error
-          );
+          console.error("SELLER ORDER DETAILS ERROR:", error);
 
           toast.error(
             error?.response?.data?.message ||
               error?.message ||
-              "Failed to fetch order details"
+              "Failed to fetch order details",
           );
         }
       } finally {
@@ -141,60 +129,85 @@ const SellerOrderDetails = () => {
   }, [id]);
 
   // =====================================================
-  // REFRESH
+  // REFRESH HANDLER
   // =====================================================
-
-  const handleRefresh = () => {
-    loadOrder(true);
+  const handleRefresh = async () => {
+    if (refreshing || updating) return;
+    await loadOrder(true);
   };
 
   // =====================================================
   // UPDATE ORDER STATUS
   // =====================================================
 
-  const updateStatus = async (status) => {
-    if (!id || updating) return;
+  const updateStatus = async (nextStatus, nextComment = "") => {
+    if (!id || updating || !nextStatus) return;
+
+    if (
+      !["Processing", "Shipped", "Delivered", "Cancelled"].includes(nextStatus)
+    ) {
+      toast.error("Invalid order status");
+      return;
+    }
+
+    if (order?.orderStatus === nextStatus) {
+      toast.error(`Order is already ${nextStatus}`);
+      return;
+    }
 
     try {
       setUpdating(true);
 
-      const { data } = await axiosInstance.put(
-        `/seller/orders/${id}`,
-        {
-          status,
-        }
-      );
+      const payload = {
+        status: nextStatus,
+        ...(nextComment.trim() ? { comment: nextComment.trim() } : {}),
+      };
+
+      const { data } = await axiosInstance.put(`/seller/orders/${id}`, payload);
 
       if (!data?.success) {
-        throw new Error(
-          data?.message ||
-            "Failed to update order status"
-        );
+        throw new Error(data?.message || "Failed to update order status");
       }
 
       if (data?.order) {
         setOrder(data.order);
+        setStatus(data.order.orderStatus || nextStatus);
       } else {
         await loadOrder(false);
       }
 
-      toast.success(
-        `Order marked as ${status}`
-      );
+      setComment("");
+      toast.success(`Order marked as ${nextStatus}`);
     } catch (error) {
-      console.error(
-        "UPDATE STATUS ERROR:",
-        error
-      );
+      console.error("UPDATE STATUS ERROR:", error);
 
       toast.error(
         error?.response?.data?.message ||
           error?.message ||
-          "Failed to update order status"
+          "Failed to update order status",
       );
     } finally {
       setUpdating(false);
     }
+  };
+
+  const handleStatusUpdate = async (event) => {
+    event.preventDefault();
+
+    if (
+      order?.orderStatus === "Delivered" ||
+      order?.orderStatus === "Cancelled"
+    ) {
+      toast.error("This order can no longer be updated");
+      return;
+    }
+
+    if (!status) {
+      toast.error("Please select an order status");
+      return;
+    }
+
+    await updateStatus(status, comment);
   };
 
   // =====================================================
@@ -205,36 +218,31 @@ const SellerOrderDetails = () => {
     switch (status) {
       case "Processing":
         return {
-          className:
-            "bg-amber-50 text-amber-700 border-amber-200",
+          className: "bg-amber-50 text-amber-700 border-amber-200",
           icon: <Clock3 size={16} />,
         };
 
       case "Shipped":
         return {
-          className:
-            "bg-blue-50 text-blue-700 border-blue-200",
+          className: "bg-blue-50 text-blue-700 border-blue-200",
           icon: <Truck size={16} />,
         };
 
       case "Delivered":
         return {
-          className:
-            "bg-emerald-50 text-emerald-700 border-emerald-200",
+          className: "bg-emerald-50 text-emerald-700 border-emerald-200",
           icon: <CheckCircle2 size={16} />,
         };
 
       case "Cancelled":
         return {
-          className:
-            "bg-rose-50 text-rose-700 border-rose-200",
+          className: "bg-rose-50 text-rose-700 border-rose-200",
           icon: <XCircle size={16} />,
         };
 
       default:
         return {
-          className:
-            "bg-slate-50 text-slate-700 border-slate-200",
+          className: "bg-slate-50 text-slate-700 border-slate-200",
           icon: <Package size={16} />,
         };
     }
@@ -308,18 +316,14 @@ const SellerOrderDetails = () => {
             <AlertCircle size={30} />
           </div>
 
-          <h2 className="text-xl font-bold text-slate-900">
-            Order Not Found
-          </h2>
+          <h2 className="text-xl font-bold text-slate-900">Order Not Found</h2>
 
           <p className="text-sm text-slate-500 mt-2 mb-6">
             This order could not be found.
           </p>
 
           <button
-            onClick={() =>
-              navigate("/seller/orders")
-            }
+            onClick={() => navigate("/seller/orders")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition"
           >
             <ArrowLeft size={17} />
@@ -334,23 +338,18 @@ const SellerOrderDetails = () => {
   // DATA
   // =====================================================
 
-  const statusConfig = getStatusConfig(
-    order.orderStatus
-  );
+  const statusConfig = getStatusConfig(order.orderStatus);
 
   const sellerItems = order.orderItems || [];
 
   const itemsTotal = sellerItems.reduce(
     (total, item) =>
-      total +
-      Number(item.price || 0) *
-        Number(item.quantity || 0),
-    0
+      total + Number(item.price || 0) * Number(item.quantity || 0),
+    0,
   );
 
   const isLocked =
-    order.orderStatus === "Delivered" ||
-    order.orderStatus === "Cancelled";
+    order.orderStatus === "Delivered" || order.orderStatus === "Cancelled";
 
   // =====================================================
   // MAIN UI
@@ -358,7 +357,6 @@ const SellerOrderDetails = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
       {/* =================================================
           HEADER
       ================================================= */}
@@ -377,9 +375,7 @@ const SellerOrderDetails = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div>
             <button
-              onClick={() =>
-                navigate("/seller/orders")
-              }
+              onClick={() => navigate("/seller/orders")}
               className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-orange-600 transition mb-4"
             >
               <ArrowLeft size={17} />
@@ -393,10 +389,7 @@ const SellerOrderDetails = () => {
 
               <div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                  Order #
-                  {order._id
-                    ?.slice(-8)
-                    ?.toUpperCase()}
+                  Order #{order._id?.slice(-8)?.toUpperCase()}
                 </h1>
 
                 <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
@@ -405,11 +398,7 @@ const SellerOrderDetails = () => {
                   <span>
                     Placed on{" "}
                     {order.createdAt
-                      ? new Date(
-                          order.createdAt
-                        ).toLocaleString(
-                          "en-IN"
-                        )
+                      ? new Date(order.createdAt).toLocaleString("en-IN")
                       : "N/A"}
                   </span>
                 </div>
@@ -439,9 +428,7 @@ const SellerOrderDetails = () => {
               <RefreshCw
                 size={18}
                 className={
-                  refreshing
-                    ? "animate-spin text-orange-500"
-                    : "text-slate-600"
+                  refreshing ? "animate-spin text-orange-500" : "text-slate-600"
                 }
               />
             </button>
@@ -454,19 +441,16 @@ const SellerOrderDetails = () => {
       ================================================= */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
         {/* =================================================
             LEFT COLUMN
         ================================================= */}
 
         <div className="lg:col-span-2 space-y-6">
-
           {/* =================================================
               CUSTOMER + SHIPPING
           ================================================= */}
 
           <div className="grid md:grid-cols-2 gap-6">
-
             {/* CUSTOMER */}
 
             <motion.div
@@ -493,9 +477,7 @@ const SellerOrderDetails = () => {
                     Customer Information
                   </h2>
 
-                  <p className="text-[11px] text-slate-400">
-                    Customer details
-                  </p>
+                  <p className="text-[11px] text-slate-400">Customer details</p>
                 </div>
               </div>
 
@@ -506,16 +488,12 @@ const SellerOrderDetails = () => {
                   </span>
 
                   <p className="text-sm font-semibold text-slate-800 mt-1">
-                    {order.user?.name ||
-                      "N/A"}
+                    {order.user?.name || "N/A"}
                   </p>
                 </div>
 
                 <div className="flex gap-3">
-                  <Mail
-                    size={16}
-                    className="text-slate-400 mt-0.5 shrink-0"
-                  />
+                  <Mail size={16} className="text-slate-400 mt-0.5 shrink-0" />
 
                   <div className="min-w-0">
                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
@@ -523,8 +501,7 @@ const SellerOrderDetails = () => {
                     </span>
 
                     <p className="text-sm text-slate-700 truncate mt-1">
-                      {order.user?.email ||
-                        "N/A"}
+                      {order.user?.email || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -535,8 +512,7 @@ const SellerOrderDetails = () => {
                   </span>
 
                   <p className="font-mono text-[10px] text-slate-500 mt-1 break-all">
-                    {order.user?._id ||
-                      "N/A"}
+                    {order.user?._id || "N/A"}
                   </p>
                 </div>
               </div>
@@ -568,9 +544,7 @@ const SellerOrderDetails = () => {
                     Shipping Information
                   </h2>
 
-                  <p className="text-[11px] text-slate-400">
-                    Delivery address
-                  </p>
+                  <p className="text-[11px] text-slate-400">Delivery address</p>
                 </div>
               </div>
 
@@ -582,32 +556,24 @@ const SellerOrderDetails = () => {
                   />
 
                   <p className="text-sm text-slate-700">
-                    {order.shippingInfo
-                      ?.address || "N/A"}
+                    {order.shippingInfo?.address || "N/A"}
                   </p>
                 </div>
 
                 <p className="text-sm text-slate-600">
-                  {order.shippingInfo?.city ||
-                    "N/A"}
-                  ,{" "}
-                  {order.shippingInfo?.state ||
-                    "N/A"}
+                  {order.shippingInfo?.city || "N/A"},{" "}
+                  {order.shippingInfo?.state || "N/A"}
                 </p>
 
                 <p className="text-sm text-slate-600">
-                  {order.shippingInfo
-                    ?.country || "N/A"}{" "}
-                  -{" "}
-                  {order.shippingInfo
-                    ?.pinCode || "N/A"}
+                  {order.shippingInfo?.country || "N/A"} -{" "}
+                  {order.shippingInfo?.pinCode || "N/A"}
                 </p>
 
                 <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-sm text-slate-600">
                   <Phone size={15} />
 
-                  {order.shippingInfo
-                    ?.phoneNo || "N/A"}
+                  {order.shippingInfo?.phoneNo || "N/A"}
                 </div>
               </div>
             </motion.div>
@@ -638,9 +604,7 @@ const SellerOrderDetails = () => {
                 </div>
 
                 <div>
-                  <h2 className="font-bold text-slate-900">
-                    Ordered Products
-                  </h2>
+                  <h2 className="font-bold text-slate-900">Ordered Products</h2>
 
                   <p className="text-[11px] text-slate-400">
                     Products in this order
@@ -650,115 +614,81 @@ const SellerOrderDetails = () => {
 
               <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full">
                 {sellerItems.length}{" "}
-                {sellerItems.length === 1
-                  ? "Item"
-                  : "Items"}
+                {sellerItems.length === 1 ? "Item" : "Items"}
               </span>
             </div>
 
             {sellerItems.length === 0 ? (
               <div className="p-10 text-center">
-                <Package
-                  size={30}
-                  className="mx-auto text-slate-300 mb-2"
-                />
+                <Package size={30} className="mx-auto text-slate-300 mb-2" />
 
                 <p className="text-sm text-slate-500">
-                  No products found in
-                  this order.
+                  No products found in this order.
                 </p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
-                {sellerItems.map(
-                  (item, index) => (
-                    <motion.div
-                      key={
-                        item.product?._id ||
-                        item.product ||
-                        index
-                      }
-                      initial={{
-                        opacity: 0,
-                        x: -10,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        x: 0,
-                      }}
-                      transition={{
-                        delay:
-                          0.18 +
-                          index * 0.05,
-                      }}
-                      className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-orange-50/20 transition-colors"
-                    >
-                      <div className="w-20 h-20 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
-                        <img
-                          src={item.image}
-                          alt={
-                            item.name ||
-                            "Product"
-                          }
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display =
-                              "none";
-                          }}
-                        />
-                      </div>
+                {sellerItems.map((item, index) => (
+                  <motion.div
+                    key={item.product?._id || item.product || index}
+                    initial={{
+                      opacity: 0,
+                      x: -10,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                    }}
+                    transition={{
+                      delay: 0.18 + index * 0.05,
+                    }}
+                    className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-orange-50/20 transition-colors"
+                  >
+                    <div className="w-20 h-20 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
+                      <img
+                        src={item.image}
+                        alt={item.name || "Product"}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    </div>
 
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-slate-800 text-sm sm:text-base line-clamp-2">
-                          {item.name ||
-                            "Product"}
-                        </h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-slate-800 text-sm sm:text-base line-clamp-2">
+                        {item.name || "Product"}
+                      </h3>
 
-                        <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2">
-                          <span className="text-xs text-slate-500">
-                            Qty:{" "}
-                            <strong className="text-slate-700">
-                              {item.quantity ||
-                                0}
-                            </strong>
-                          </span>
-
-                          <span className="text-xs text-slate-500">
-                            Price: ₹
-                            {Number(
-                              item.price ||
-                                0
-                            ).toLocaleString(
-                              "en-IN"
-                            )}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="sm:text-right">
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
-                          Subtotal
+                      <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2">
+                        <span className="text-xs text-slate-500">
+                          Qty:{" "}
+                          <strong className="text-slate-700">
+                            {item.quantity || 0}
+                          </strong>
                         </span>
 
-                        <strong className="text-base font-extrabold text-slate-900">
-                          ₹
-                          {(
-                            Number(
-                              item.price ||
-                                0
-                            ) *
-                            Number(
-                              item.quantity ||
-                                0
-                            )
-                          ).toLocaleString(
-                            "en-IN"
-                          )}
-                        </strong>
+                        <span className="text-xs text-slate-500">
+                          Price: ₹
+                          {Number(item.price || 0).toLocaleString("en-IN")}
+                        </span>
                       </div>
-                    </motion.div>
-                  )
-                )}
+                    </div>
+
+                    <div className="sm:text-right">
+                      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                        Subtotal
+                      </span>
+
+                      <strong className="text-base font-extrabold text-slate-900">
+                        ₹
+                        {(
+                          Number(item.price || 0) * Number(item.quantity || 0)
+                        ).toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             )}
 
@@ -769,10 +699,7 @@ const SellerOrderDetails = () => {
                 </span>
 
                 <span className="text-lg font-bold text-orange-600">
-                  ₹
-                  {itemsTotal.toLocaleString(
-                    "en-IN"
-                  )}
+                  ₹{itemsTotal.toLocaleString("en-IN")}
                 </span>
               </div>
             )}
@@ -821,8 +748,7 @@ const SellerOrderDetails = () => {
                 <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
                   <ShieldCheck size={14} />
 
-                  {order.paymentInfo
-                    ?.status || "N/A"}
+                  {order.paymentInfo?.status || "N/A"}
                 </div>
               </div>
 
@@ -832,8 +758,7 @@ const SellerOrderDetails = () => {
                 </span>
 
                 <p className="font-mono text-[10px] text-slate-600 mt-2 break-all">
-                  {order.paymentInfo?.id ||
-                    "N/A"}
+                  {order.paymentInfo?.id || "N/A"}
                 </p>
               </div>
 
@@ -844,11 +769,7 @@ const SellerOrderDetails = () => {
 
                 <p className="text-xs text-slate-600 mt-2">
                   {order.paidAt
-                    ? new Date(
-                        order.paidAt
-                      ).toLocaleString(
-                        "en-IN"
-                      )
+                    ? new Date(order.paidAt).toLocaleString("en-IN")
                     : "N/A"}
                 </p>
               </div>
@@ -860,133 +781,86 @@ const SellerOrderDetails = () => {
           ================================================= */}
 
           <motion.div
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              delay: 0.25,
-            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
             className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
           >
+            {/* HEADER */}
             <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
                 <Clock3 size={19} />
               </div>
-
               <div>
-                <h2 className="font-bold text-slate-900">
-                  Status History
-                </h2>
-
+                <h2 className="font-bold text-slate-900">Status History</h2>
                 <p className="text-[11px] text-slate-400">
                   Order activity timeline
                 </p>
               </div>
             </div>
 
+            {/* TIMELINE LIST / EMPTY STATE */}
             <div className="p-6">
-              {order.statusHistory?.length >
-              0 ? (
+              {order.statusHistory?.length > 0 ? (
                 <div className="relative">
                   {/* TIMELINE LINE */}
-
                   <div className="absolute left-[9px] top-3 bottom-3 w-px bg-slate-200" />
 
                   <div className="space-y-7">
-                    {[
-                      ...order.statusHistory,
-                    ]
+                    {[...order.statusHistory]
                       .reverse()
-                      .map(
-                        (
-                          history,
-                          index
-                        ) => {
-                          const config =
-                            getStatusConfig(
-                              history.status
-                            );
+                      .map((history, index) => {
+                        const config = getStatusConfig(history.status);
 
-                          return (
-                            <motion.div
-                              key={index}
-                              initial={{
-                                opacity: 0,
-                                x: -10,
-                              }}
-                              animate={{
-                                opacity: 1,
-                                x: 0,
-                              }}
-                              transition={{
-                                delay:
-                                  0.3 +
-                                  index *
-                                    0.06,
-                              }}
-                              className="relative flex gap-4"
+                        return (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 + index * 0.06 }}
+                            className="relative flex gap-4"
+                          >
+                            {/* DOT */}
+                            <div
+                              className={`relative z-10 w-[19px] h-[19px] rounded-full border-4 border-white ring-1 ring-slate-200 flex items-center justify-center ${config.className}`}
                             >
-                              {/* DOT */}
+                              <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                            </div>
 
-                              <div
-                                className={`relative z-10 w-[19px] h-[19px] rounded-full border-4 border-white ring-1 ring-slate-200 flex items-center justify-center ${config.className}`}
-                              >
-                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                            {/* CONTENT */}
+                            <div className="flex-1 -mt-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${config.className}`}
+                                >
+                                  {config.icon}
+                                  {history.status || "N/A"}
+                                </span>
+
+                                <span className="text-[10px] text-slate-400">
+                                  {history.updatedAt
+                                    ? new Date(
+                                        history.updatedAt,
+                                      ).toLocaleString("en-IN")
+                                    : ""}
+                                </span>
                               </div>
 
-                              {/* CONTENT */}
-
-                              <div className="flex-1 -mt-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span
-                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${config.className}`}
-                                  >
-                                    {config.icon}
-
-                                    {history.status ||
-                                      "N/A"}
-                                  </span>
-
-                                  <span className="text-[10px] text-slate-400">
-                                    {history.updatedAt
-                                      ? new Date(
-                                          history.updatedAt
-                                        ).toLocaleString(
-                                          "en-IN"
-                                        )
-                                      : ""}
-                                  </span>
-                                </div>
-
-                                <p className="text-xs text-slate-500 mt-2">
-                                  {history.comment ||
-                                    `Order status updated to ${
-                                      history.status ||
-                                      "N/A"
-                                    }`}
-                                </p>
-                              </div>
-                            </motion.div>
-                          );
-                        }
-                      )}
+                              <p className="text-xs text-slate-500 mt-2">
+                                {history.comment ||
+                                  `Order status updated to ${history.status || "N/A"}`}
+                              </p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
                   </div>
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Clock3
-                    size={28}
-                    className="mx-auto text-slate-300 mb-2"
-                  />
-
+                  <Clock3 size={28} className="mx-auto text-slate-300 mb-2" />
                   <p className="text-sm text-slate-400">
-                    No status history
-                    available.
+                    No status history available.
                   </p>
                 </div>
               )}
@@ -999,7 +873,6 @@ const SellerOrderDetails = () => {
         ================================================= */}
 
         <div className="space-y-6">
-
           {/* =================================================
               PRICE SUMMARY
           ================================================= */}
@@ -1025,9 +898,7 @@ const SellerOrderDetails = () => {
                 </div>
 
                 <div>
-                  <h2 className="font-bold text-slate-900">
-                    Price Summary
-                  </h2>
+                  <h2 className="font-bold text-slate-900">Price Summary</h2>
 
                   <p className="text-[11px] text-slate-400 mt-1">
                     Complete order breakdown
@@ -1039,50 +910,26 @@ const SellerOrderDetails = () => {
             <div className="p-6">
               <div className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">
-                    Items Price
-                  </span>
+                  <span className="text-slate-500">Items Price</span>
 
                   <strong className="text-slate-800">
-                    ₹
-                    {Number(
-                      order.itemsPrice ||
-                        0
-                    ).toLocaleString(
-                      "en-IN"
-                    )}
+                    ₹{Number(order.itemsPrice || 0).toLocaleString("en-IN")}
                   </strong>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">
-                    Tax
-                  </span>
+                  <span className="text-slate-500">Tax</span>
 
                   <strong className="text-slate-800">
-                    ₹
-                    {Number(
-                      order.taxPrice ||
-                        0
-                    ).toLocaleString(
-                      "en-IN"
-                    )}
+                    ₹{Number(order.taxPrice || 0).toLocaleString("en-IN")}
                   </strong>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">
-                    Shipping
-                  </span>
+                  <span className="text-slate-500">Shipping</span>
 
                   <strong className="text-slate-800">
-                    ₹
-                    {Number(
-                      order.shippingPrice ||
-                        0
-                    ).toLocaleString(
-                      "en-IN"
-                    )}
+                    ₹{Number(order.shippingPrice || 0).toLocaleString("en-IN")}
                   </strong>
                 </div>
               </div>
@@ -1090,29 +937,19 @@ const SellerOrderDetails = () => {
               <div className="my-5 border-t border-dashed border-slate-200" />
 
               <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-700">
-                  Total
-                </span>
+                <span className="font-bold text-slate-700">Total</span>
 
                 <div className="flex items-center gap-1 text-orange-600">
                   <IndianRupee size={18} />
 
                   <strong className="text-2xl font-extrabold">
-                    {Number(
-                      order.totalPrice ||
-                        0
-                    ).toLocaleString(
-                      "en-IN"
-                    )}
+                    {Number(order.totalPrice || 0).toLocaleString("en-IN")}
                   </strong>
                 </div>
               </div>
 
               <div className="mt-5 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
-                <ShieldCheck
-                  size={16}
-                  className="text-emerald-600"
-                />
+                <ShieldCheck size={16} className="text-emerald-600" />
 
                 <span className="text-[11px] font-semibold text-emerald-700">
                   Payment secured
@@ -1126,30 +963,23 @@ const SellerOrderDetails = () => {
           ================================================= */}
 
           <motion.div
-            initial={{
-              opacity: 0,
-              x: 20,
-            }}
-            animate={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={{
-              delay: 0.2,
-            }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
             className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
           >
+            {/* HEADER */}
             <div className="px-6 py-5 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                  <RefreshCw size={18} />
+                  <RefreshCw
+                    size={18}
+                    className={updating ? "animate-spin" : ""}
+                  />
                 </div>
 
                 <div>
-                  <h2 className="font-bold text-slate-900">
-                    Update Status
-                  </h2>
-
+                  <h2 className="font-bold text-slate-900">Update Status</h2>
                   <p className="text-[11px] text-slate-400">
                     Manage order progress
                   </p>
@@ -1158,9 +988,7 @@ const SellerOrderDetails = () => {
             </div>
 
             <div className="p-6">
-
-              {/* LOCKED */}
-
+              {/* LOCKED STATE */}
               {isLocked ? (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center">
                   <div className="w-11 h-11 mx-auto rounded-xl bg-white border border-slate-200 text-slate-400 flex items-center justify-center mb-3">
@@ -1172,17 +1000,15 @@ const SellerOrderDetails = () => {
                   </h3>
 
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    {order.orderStatus ===
-                    "Delivered"
+                    {order.orderStatus === "Delivered"
                       ? "This order has already been delivered and cannot be updated."
                       : "This order has been cancelled and cannot be updated."}
                   </p>
                 </div>
               ) : (
-                <>
+                <form onSubmit={handleStatusUpdate} className="space-y-5">
                   {/* CURRENT STATUS */}
-
-                  <div className="mb-4">
+                  <div>
                     <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-2">
                       Current Status
                     </p>
@@ -1191,89 +1017,96 @@ const SellerOrderDetails = () => {
                       className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold ${statusConfig.className}`}
                     >
                       {statusConfig.icon}
-
-                      {order.orderStatus ||
-                        "N/A"}
+                      {order.orderStatus || "N/A"}
                     </div>
                   </div>
 
-                  {/* BUTTONS */}
+                  {/* QUICK STATUS ACTION BUTTONS */}
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider text-slate-500 font-bold block mb-2">
+                      Quick Select
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {["Processing", "Shipped", "Delivered"].map((st) => {
+                        const isCurrent = order.orderStatus === st;
+                        const isSelected = status === st;
 
-                  <div className="space-y-2">
-                    {[
-                      "Processing",
-                      "Shipped",
-                      "Delivered",
-                    ].map((status) => {
-                      const isCurrent =
-                        order.orderStatus ===
-                        status;
-
-                      return (
-                        <button
-                          key={status}
-                          type="button"
-                          disabled={
-                            updating ||
-                            isCurrent
-                          }
-                          onClick={() =>
-                            updateStatus(
-                              status
-                            )
-                          }
-                          className={`w-full py-3 rounded-xl text-sm font-bold transition-all border ${
-                            isCurrent
-                              ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                              : "bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500 hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5"
-                          } ${
-                            updating
-                              ? "opacity-60 cursor-not-allowed"
-                              : ""
-                          }`}
-                        >
-                          <span className="flex items-center justify-center gap-2">
-                            {status ===
-                              "Processing" && (
-                              <Clock3
-                                size={16}
-                              />
-                            )}
-
-                            {status ===
-                              "Shipped" && (
-                              <Truck
-                                size={16}
-                              />
-                            )}
-
-                            {status ===
-                              "Delivered" && (
-                              <CheckCircle2
-                                size={16}
-                              />
-                            )}
-
-                            {isCurrent
-                              ? `Current: ${status}`
-                              : `Mark as ${status}`}
-                          </span>
-                        </button>
-                      );
-                    })}
+                        return (
+                          <button
+                            key={st}
+                            type="button"
+                            disabled={updating || isCurrent}
+                            onClick={() => setStatus(st)}
+                            className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
+                              isCurrent
+                                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                : isSelected
+                                  ? "bg-orange-50 text-orange-600 border-orange-300 ring-2 ring-orange-100"
+                                  : "bg-white text-slate-700 border-slate-200 hover:border-orange-200 hover:bg-slate-50"
+                            }`}
+                          >
+                            {st === "Processing" && <Clock3 size={14} />}
+                            {st === "Shipped" && <Truck size={14} />}
+                            {st === "Delivered" && <CheckCircle2 size={14} />}
+                            <span>{st}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {updating && (
-                    <div className="flex items-center justify-center gap-2 text-xs text-slate-500 mt-4">
-                      <RefreshCw
-                        size={14}
-                        className="animate-spin"
-                      />
+                  {/* DROPDOWN SELECT */}
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                      Select Status
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      disabled={updating}
+                      className="w-full mt-2 px-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700 outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100 transition-all disabled:opacity-60"
+                    >
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
 
-                      Updating order...
-                    </div>
-                  )}
-                </>
+                  {/* COMMENT TEXTAREA */}
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider text-slate-500 font-bold flex items-center gap-1">
+                      <MessageSquare size={12} />
+                      Comment
+                    </label>
+                    <textarea
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="Example: Order has been shipped."
+                      rows={3}
+                      disabled={updating}
+                      className="w-full mt-2 px-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 outline-none resize-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100 transition-all disabled:opacity-60"
+                    />
+                  </div>
+
+                  {/* SUBMIT BUTTON */}
+                  <motion.button
+                    type="submit"
+                    disabled={updating}
+                    whileHover={{ scale: updating ? 1 : 1.01 }}
+                    whileTap={{ scale: updating ? 1 : 0.98 }}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold shadow-md shadow-orange-200 hover:shadow-lg hover:shadow-orange-200 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {updating ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <span>Update Order Status</span>
+                    )}
+                  </motion.button>
+                </form>
               )}
             </div>
           </motion.div>
@@ -1297,51 +1130,34 @@ const SellerOrderDetails = () => {
             className="bg-slate-900 rounded-2xl p-6 text-white"
           >
             <div className="flex items-center gap-2 mb-5">
-              <Package
-                size={17}
-                className="text-orange-400"
-              />
+              <Package size={17} className="text-orange-400" />
 
-              <h2 className="font-bold">
-                Order Information
-              </h2>
+              <h2 className="font-bold">Order Information</h2>
             </div>
 
             <div>
-              <p className="text-xs text-slate-400">
-                Order Created
-              </p>
+              <p className="text-xs text-slate-400">Order Created</p>
 
               <p className="font-semibold mt-1 text-sm">
                 {order.createdAt
-                  ? new Date(
-                      order.createdAt
-                    ).toLocaleString(
-                      "en-IN"
-                    )
+                  ? new Date(order.createdAt).toLocaleString("en-IN")
                   : "N/A"}
               </p>
             </div>
 
             <div className="mt-5">
-              <p className="text-xs text-slate-400">
-                Payment ID
-              </p>
+              <p className="text-xs text-slate-400">Payment ID</p>
 
               <p className="text-sm font-medium mt-1 break-all">
-                {order.paymentInfo?.id ||
-                  "N/A"}
+                {order.paymentInfo?.id || "N/A"}
               </p>
             </div>
 
             <div className="mt-5">
-              <p className="text-xs text-slate-400">
-                Payment Status
-              </p>
+              <p className="text-xs text-slate-400">Payment Status</p>
 
               <p className="text-sm font-semibold mt-1">
-                {order.paymentInfo
-                  ?.status || "N/A"}
+                {order.paymentInfo?.status || "N/A"}
               </p>
             </div>
           </motion.div>
