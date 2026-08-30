@@ -1,6 +1,4 @@
-
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -21,7 +19,6 @@ import {
   Clock,
   Truck,
   Calendar,
-  ShieldCheck,
   Boxes,
 } from "lucide-react";
 
@@ -41,74 +38,107 @@ import {
 import axiosInstance from "../../api/axios";
 import Loader from "../../components/common/Loader";
 
+// Safely resolve an image-like field that might be a string, an
+// object ({ url }), or missing entirely — never passes an object
+// straight into an <img src>.
+const resolveImageSrc = (value, fallback = "/placeholder.png") => {
+  if (!value) return fallback;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && typeof value.url === "string") {
+    return value.url;
+  }
+  return fallback;
+};
+
 const AdminDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   const navigate = useNavigate();
 
   // ==============================
-  // FETCH DASHBOARD DATA
-  // NOTE: backend /admin/dashboard response should now also include
-  // `allProducts` (full catalog) alongside existing fields.
-  // If unavailable, the dashboard safely shows an empty product list.
+  // SINGLE SOURCE OF TRUTH FOR FETCHING
+  // Used for both the initial load and the manual refresh button,
+  // so the two can never drift out of sync.
   // ==============================
-  const fetchDashboardStats = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+  const fetchDashboardStats = useCallback(async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+      setLoadError(null);
+    }
 
+    try {
       const response = await axiosInstance.get("/admin/dashboard");
 
       if (response.data?.success) {
         setData(response.data);
+        setLoadError(null);
+        if (isRefresh) {
+          toast.success("Dashboard refreshed");
+        }
       } else {
-        toast.error("Unable to load dashboard data");
+        throw new Error(
+          response.data?.message || "Unable to load dashboard data",
+        );
       }
     } catch (error) {
       console.error("DASHBOARD FETCH ERROR:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to load dashboard metrics",
-      );
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to load dashboard metrics";
+      toast.error(message);
+      if (!isRefresh) {
+        setLoadError(message);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   // ==============================
-  // INITIAL DASHBOARD LOAD
+  // INITIAL LOAD (race-condition safe)
   // ==============================
   useEffect(() => {
     let ignore = false;
 
-    const loadDashboard = async () => {
+    (async () => {
+      setLoading(true);
+      setLoadError(null);
+
       try {
         const response = await axiosInstance.get("/admin/dashboard");
 
-        if (!ignore && response.data?.success) {
+        if (ignore) return;
+
+        if (response.data?.success) {
           setData(response.data);
+        } else {
+          throw new Error(
+            response.data?.message || "Unable to load dashboard data",
+          );
         }
       } catch (error) {
         if (!ignore) {
           console.error("DASHBOARD FETCH ERROR:", error);
-          toast.error(
+          const message =
             error?.response?.data?.message ||
-              "Failed to load dashboard metrics",
-          );
+            error?.message ||
+            "Failed to load dashboard metrics";
+          toast.error(message);
+          setLoadError(message);
         }
       } finally {
         if (!ignore) {
           setLoading(false);
         }
       }
-    };
-
-    loadDashboard();
+    })();
 
     return () => {
       ignore = true;
@@ -127,6 +157,32 @@ const AdminDashboard = () => {
   }
 
   // ==============================
+  // ERROR STATE — instead of silently rendering a zeroed dashboard
+  // ==============================
+  if (loadError && !data) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-white px-4">
+        <div className="text-center bg-white border border-orange-100 rounded-2xl p-10 max-w-sm shadow-sm">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center mb-5">
+            <AlertTriangle size={30} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">
+            Couldn't load dashboard
+          </h2>
+          <p className="text-sm text-slate-500 mt-2 mb-6">{loadError}</p>
+          <button
+            onClick={() => fetchDashboardStats(false)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition"
+          >
+            <RefreshCw size={16} />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ==============================
   // SAFE DATA PARSING
   // ==============================
   const {
@@ -137,19 +193,14 @@ const AdminDashboard = () => {
     monthlyRevenue = [],
   } = data || {};
 
-  // ==============================
-  // NUMBER FORMATTER
-  // ==============================
   const formatNumber = (value = 0) => {
     return Number(value || 0).toLocaleString("en-IN");
   };
 
-  // ==============================
-  // DATE FORMATTER (e.g., "26 Aug")
-  // ==============================
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return "N/A";
     return date.toLocaleDateString("en-IN", {
       day: "numeric",
       month: "short",
@@ -176,11 +227,25 @@ const AdminDashboard = () => {
     if (rawRevenueData.length >= 2) return rawRevenueData;
 
     const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     const currentEntry = rawRevenueData[0];
-    const currentMonthIndex = months.indexOf(currentEntry.month);
+    // Normalize so "January" / "january" / "JAN" all match "Jan"
+    const normalizedMonth = String(currentEntry.month || "").slice(0, 3);
+    const currentMonthIndex = months.findIndex(
+      (m) => m.toLowerCase() === normalizedMonth.toLowerCase(),
+    );
 
     if (currentMonthIndex === -1) {
       return [{ month: "Prev", revenue: 0 }, currentEntry];
@@ -206,10 +271,30 @@ const AdminDashboard = () => {
   };
 
   const orderStatusData = [
-    { name: "Processing", value: stats?.processing || 0, color: "#F59E0B", icon: Clock },
-    { name: "Shipped", value: stats?.shipped || 0, color: "#3B82F6", icon: Truck },
-    { name: "Delivered", value: stats?.delivered || 0, color: "#F97316", icon: CheckCircle2 },
-    { name: "Cancelled", value: stats?.cancelled || 0, color: "#EF4444", icon: XCircle },
+    {
+      name: "Processing",
+      value: stats?.processing || 0,
+      color: "#F59E0B",
+      icon: Clock,
+    },
+    {
+      name: "Shipped",
+      value: stats?.shipped || 0,
+      color: "#3B82F6",
+      icon: Truck,
+    },
+    {
+      name: "Delivered",
+      value: stats?.delivered || 0,
+      color: "#F97316",
+      icon: CheckCircle2,
+    },
+    {
+      name: "Cancelled",
+      value: stats?.cancelled || 0,
+      color: "#EF4444",
+      icon: XCircle,
+    },
   ];
 
   // ==============================
@@ -255,7 +340,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen  text-slate-800 p-4 sm:p-6 lg:p-8">
       <div className="max-w-[1600px] mx-auto space-y-7">
         {/* HEADER — view-only dashboard, no CRUD action here */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
@@ -286,11 +371,15 @@ const AdminDashboard = () => {
               transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
             "
           >
-            <RefreshCw size={16} className={refreshing ? "animate-spin text-orange-500" : ""} />
+            <RefreshCw
+              size={16}
+              className={refreshing ? "animate-spin text-orange-500" : ""}
+            />
             {refreshing ? "Refreshing..." : "Refresh Data"}
           </button>
         </div>
-{/* KPI CARDS */}
+
+        {/* KPI CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {statCards.map((card) => {
             const Icon = card.icon;
@@ -308,7 +397,9 @@ const AdminDashboard = () => {
                       {card.value}
                     </h3>
                   </div>
-                  <div className={`p-3 rounded-xl border border-slate-100 ${card.iconBg} ${card.iconColor}`}>
+                  <div
+                    className={`p-3 rounded-xl border border-slate-100 ${card.iconBg} ${card.iconColor}`}
+                  >
                     <Icon size={21} />
                   </div>
                 </div>
@@ -316,7 +407,9 @@ const AdminDashboard = () => {
                   <span className="flex items-center justify-center w-5 h-5 rounded-full bg-orange-100">
                     <TrendingUp size={11} className="text-orange-600" />
                   </span>
-                  <span className="text-xs font-medium text-slate-500">{card.description}</span>
+                  <span className="text-xs font-medium text-slate-500">
+                    {card.description}
+                  </span>
                 </div>
               </div>
             );
@@ -328,12 +421,18 @@ const AdminDashboard = () => {
           <div className="xl:col-span-2 rounded-2xl border border-orange-100 bg-white p-5 sm:p-6 shadow-sm">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Revenue Overview</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Monthly revenue performance</p>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Revenue Overview
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Monthly revenue performance
+                </p>
               </div>
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-ping" />
-                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Live</span>
+                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">
+                  Live
+                </span>
               </div>
             </div>
 
@@ -343,37 +442,79 @@ const AdminDashboard = () => {
                   <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
                     <TrendingUp size={22} className="text-orange-500" />
                   </div>
-                  <p className="text-sm font-semibold text-slate-700">No revenue data</p>
-                  <p className="text-xs text-slate-500 mt-1">Revenue analytics will appear here.</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    No revenue data
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Revenue analytics will appear here.
+                  </p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={revenueChartData}>
                     <defs>
-                      <linearGradient id="lightOrangeGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#F97316" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="#F97316" stopOpacity={0.02} />
+                      <linearGradient
+                        id="lightOrangeGradient"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="#F97316"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#F97316"
+                          stopOpacity={0.02}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid stroke="#F1F5F9" strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="month" stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} />
+                    <CartesianGrid
+                      stroke="#F1F5F9"
+                      strokeDasharray="3 3"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="month"
+                      stroke="#94A3B8"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <YAxis
                       stroke="#94A3B8"
                       fontSize={11}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
+                      tickFormatter={(value) =>
+                        `₹${Number(value).toLocaleString("en-IN")}`
+                      }
                     />
                     <Tooltip
-                      cursor={{ stroke: "#F97316", strokeWidth: 1, strokeDasharray: "3 3" }}
+                      cursor={{
+                        stroke: "#F97316",
+                        strokeWidth: 1,
+                        strokeDasharray: "3 3",
+                      }}
                       contentStyle={{
                         backgroundColor: "#FFFFFF",
                         border: "1px solid #FED7AA",
                         borderRadius: "12px",
                         boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
                       }}
-                      labelStyle={{ color: "#EA580C", fontSize: 12, fontWeight: "bold", marginBottom: 4 }}
-                      formatter={(value) => [`₹${Number(value).toLocaleString("en-IN")}`, "Revenue"]}
+                      labelStyle={{
+                        color: "#EA580C",
+                        fontSize: 12,
+                        fontWeight: "bold",
+                        marginBottom: 4,
+                      }}
+                      formatter={(value) => [
+                        `₹${Number(value).toLocaleString("en-IN")}`,
+                        "Revenue",
+                      ]}
                     />
                     <Area
                       type="monotone"
@@ -393,7 +534,9 @@ const AdminDashboard = () => {
           <div className="rounded-2xl border border-orange-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col justify-between">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Order Status</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Current order distribution</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Current order distribution
+              </p>
             </div>
 
             <div className="h-[210px] relative my-2">
@@ -423,8 +566,12 @@ const AdminDashboard = () => {
               </ResponsiveContainer>
 
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-black text-slate-900">{formatNumber(stats?.totalOrders)}</span>
-                <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Orders</span>
+                <span className="text-2xl font-black text-slate-900">
+                  {formatNumber(stats?.totalOrders)}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                  Orders
+                </span>
               </div>
             </div>
 
@@ -439,11 +586,17 @@ const AdminDashboard = () => {
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon size={14} style={{ color: item.color }} />
-                      <span className="text-[11px] font-medium text-slate-600 truncate">{item.name}</span>
+                      <span className="text-[11px] font-medium text-slate-600 truncate">
+                        {item.name}
+                      </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs font-bold text-slate-900">{item.value}</span>
-                      <span className="text-[10px] text-slate-500 ml-1 font-semibold">({percentage})</span>
+                      <span className="text-xs font-bold text-slate-900">
+                        {item.value}
+                      </span>
+                      <span className="text-[10px] text-slate-500 ml-1 font-semibold">
+                        ({percentage})
+                      </span>
                     </div>
                   </div>
                 );
@@ -452,17 +605,18 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* RECENT ORDERS — view only. "View" opens read-only order details.
-            IMPORTANT: make sure the /admin/orders/:id detail page does NOT
-            expose a status-change control for admin — that action belongs
-            in the seller dashboard now. */}
+        {/* RECENT ORDERS — view only. */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           <div className="xl:col-span-2 rounded-2xl border border-orange-100 bg-white shadow-sm overflow-hidden flex flex-col justify-between">
             <div>
               <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-100">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Recent Orders</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">Latest transactions from your store</p>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Recent Orders
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Latest transactions from your store
+                  </p>
                 </div>
 
                 {recentOrders.length > 0 && (
@@ -481,8 +635,12 @@ const AdminDashboard = () => {
                   <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
                     <ShoppingBasket size={24} className="text-slate-500" />
                   </div>
-                  <p className="text-sm font-semibold text-slate-700">No recent orders</p>
-                  <p className="text-xs text-slate-500 mt-1">New orders will appear here.</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    No recent orders
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    New orders will appear here.
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -499,18 +657,26 @@ const AdminDashboard = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {recentOrders.map((order) => {
-                        const status = order?.orderStatus || order?.status || "Processing";
+                        const status =
+                          order?.orderStatus || order?.status || "Processing";
                         const badgeColors = {
-                          Processing: "bg-amber-50 text-amber-700 border-amber-200",
+                          Processing:
+                            "bg-amber-50 text-amber-700 border-amber-200",
                           Shipped: "bg-blue-50 text-blue-700 border-blue-200",
-                          Delivered: "bg-orange-50 text-orange-700 border-orange-200",
+                          Delivered:
+                            "bg-orange-50 text-orange-700 border-orange-200",
                           Cancelled: "bg-rose-50 text-rose-700 border-rose-200",
                         };
-                        const userAvatar =
-                          order?.user?.avatar?.url || order?.user?.avatar || order?.user?.profileImage;
+                        const userAvatar = resolveImageSrc(
+                          order?.user?.avatar || order?.user?.profileImage,
+                          null,
+                        );
 
                         return (
-                          <tr key={order?._id} className="hover:bg-white/80 transition-colors">
+                          <tr
+                            key={order?._id}
+                            className="hover:bg-white/80 transition-colors"
+                          >
                             <td className="px-5 py-4">
                               <span className="font-mono text-xs font-bold text-slate-700">
                                 #{order?._id?.slice(-6) || "------"}
@@ -526,7 +692,9 @@ const AdminDashboard = () => {
                                   />
                                 ) : (
                                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-xs font-bold text-white shadow-sm">
-                                    {(order?.user?.name || "G").charAt(0).toUpperCase()}
+                                    {(order?.user?.name || "G")
+                                      .charAt(0)
+                                      .toUpperCase()}
                                   </div>
                                 )}
                                 <span className="text-xs font-semibold text-slate-800">
@@ -536,7 +704,10 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium">
-                                <Calendar size={13} className="text-slate-500" />
+                                <Calendar
+                                  size={13}
+                                  className="text-slate-500"
+                                />
                                 {formatDate(order?.createdAt)}
                               </div>
                             </td>
@@ -554,7 +725,9 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-5 py-4 text-right">
                               <button
-                                onClick={() => navigate(`/admin/orders/${order?._id}`)}
+                                onClick={() =>
+                                  navigate(`/admin/orders/${order?._id}`)
+                                }
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-500 hover:text-white hover:border-orange-500 text-[11px] font-bold text-orange-600 transition-all"
                               >
                                 <Eye size={13} />
@@ -577,18 +750,26 @@ const AdminDashboard = () => {
               <div className="flex items-start justify-between mb-5">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-slate-900">Low Stock</h2>
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Low Stock
+                    </h2>
                     {lowStockProducts.length > 0 && (
                       <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[9px] font-bold">
                         {lowStockProducts.length}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">Products that need attention</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Products that need attention
+                  </p>
                 </div>
                 <AlertTriangle
                   size={19}
-                  className={lowStockProducts.length > 0 ? "text-orange-500" : "text-slate-300"}
+                  className={
+                    lowStockProducts.length > 0
+                      ? "text-orange-500"
+                      : "text-slate-300"
+                  }
                 />
               </div>
 
@@ -597,14 +778,18 @@ const AdminDashboard = () => {
                   <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mb-3">
                     <Sparkles size={22} className="text-orange-500" />
                   </div>
-                  <p className="text-sm font-semibold text-slate-700">Inventory looks healthy</p>
-                  <p className="text-xs text-slate-500 mt-1">No products need restocking.</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Inventory looks healthy
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    No products need restocking.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {lowStockProducts.map((product) => {
                     const stockCount = product?.stock ?? product?.Stock ?? 0;
-                    const image = product?.images?.[0]?.url || product?.images?.[0] || "/placeholder.png";
+                    const image = resolveImageSrc(product?.images?.[0]);
 
                     return (
                       <div
@@ -638,8 +823,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* ALL PRODUCTS — full read-only catalog, no add/edit/delete here.
-            Product management is available from the Admin Products page. */}
+        {/* ALL PRODUCTS — full read-only catalog, no add/edit/delete here. */}
         <div className="rounded-2xl border border-orange-100 bg-white shadow-sm overflow-hidden">
           <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-100">
             <div className="flex items-center gap-2">
@@ -647,7 +831,9 @@ const AdminDashboard = () => {
                 <Boxes size={18} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900">All Products</h2>
+                <h2 className="text-lg font-bold text-slate-900">
+                  All Products
+                </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Full catalog across all sellers
                 </p>
@@ -663,7 +849,9 @@ const AdminDashboard = () => {
               <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
                 <Package size={22} className="text-slate-500" />
               </div>
-              <p className="text-sm font-semibold text-slate-700">No products yet</p>
+              <p className="text-sm font-semibold text-slate-700">
+                No products yet
+              </p>
               <p className="text-xs text-slate-500 mt-1">
                 Products added by sellers will show up here.
               </p>
@@ -682,9 +870,12 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {allProducts.map((product) => {
-                    const image = product?.images?.[0]?.url || product?.images?.[0] || "/placeholder.png";
+                    const image = resolveImageSrc(product?.images?.[0]);
                     return (
-                      <tr key={product?._id} className="hover:bg-white/80 transition-colors">
+                      <tr
+                        key={product?._id}
+                        className="hover:bg-white/80 transition-colors"
+                      >
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
                             <img
