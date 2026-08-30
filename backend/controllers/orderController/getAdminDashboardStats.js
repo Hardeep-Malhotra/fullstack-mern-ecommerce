@@ -1,70 +1,175 @@
+
 import Order from "../../models/orderModel.js";
 import Product from "../../models/productModel.js";
 import User from "../../models/userModel.js";
 
+// =====================================================
+// GET ADMIN DASHBOARD STATS
 // GET /api/v1/admin/dashboard
+// =====================================================
+
 export const getAdminDashboardStats = async (req, res) => {
   try {
-    // 1. Total Counts Fetching
+    // =====================================================
+    // 1. TOTAL COUNTS
+    // =====================================================
+
     const totalUsers = await User.countDocuments();
+
     const totalProducts = await Product.countDocuments();
+
     const totalOrders = await Order.countDocuments();
 
-    // 2. Order Status Breakdown
+    // =====================================================
+    // 2. ORDER STATUS BREAKDOWN
+    // =====================================================
+
     const processing = await Order.countDocuments({
       orderStatus: "Processing",
     });
-    const shipped = await Order.countDocuments({ orderStatus: "Shipped" });
-    const delivered = await Order.countDocuments({ orderStatus: "Delivered" });
-    const cancelled = await Order.countDocuments({ orderStatus: "Cancelled" });
 
-    // 3. Total Revenue Calculation (Only non-cancelled orders)
+    const shipped = await Order.countDocuments({
+      orderStatus: "Shipped",
+    });
+
+    const delivered = await Order.countDocuments({
+      orderStatus: "Delivered",
+    });
+
+    const cancelled = await Order.countDocuments({
+      orderStatus: "Cancelled",
+    });
+
+    // =====================================================
+    // 3. TOTAL REVENUE
+    // Cancelled orders excluded
+    // =====================================================
+
     const revenueData = await Order.aggregate([
-      { $match: { orderStatus: { $ne: "Cancelled" } } },
-      { $group: { _id: null, totalRevenue: { $sum: "$totalPrice" } } },
-    ]);
-    const totalRevenue =
-      revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
-
-    // 4. Monthly Revenue Calculation (For Recharts Area Chart)
-    const monthlyRevenue = await Order.aggregate([
-      { $match: { orderStatus: { $ne: "Cancelled" } } },
       {
-        $group: {
-          _id: { $month: "$createdAt" },
-          revenue: { $sum: "$totalPrice" },
+        $match: {
+          orderStatus: {
+            $ne: "Cancelled",
+          },
         },
       },
-      { $sort: { _id: 1 } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: {
+            $sum: "$totalPrice",
+          },
+        },
+      },
     ]);
 
-    // Month Names Mapping Array
+    const totalRevenue =
+      revenueData.length > 0
+        ? revenueData[0].totalRevenue
+        : 0;
+
+    // =====================================================
+    // 4. MONTHLY REVENUE
+    // =====================================================
+
+    const monthlyRevenue = await Order.aggregate([
+      {
+        $match: {
+          orderStatus: {
+            $ne: "Cancelled",
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $month: "$createdAt",
+          },
+          revenue: {
+            $sum: "$totalPrice",
+          },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
+
     const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
-    // Format monthly data for frontend
-    const formattedMonthlyRevenue = monthlyRevenue.map((item) => ({
-      month: monthNames[item._id - 1] || "N/A",
-      revenue: item.revenue,
-    }));
+    const formattedMonthlyRevenue = monthlyRevenue.map(
+      (item) => ({
+        month:
+          monthNames[item._id - 1] || "N/A",
+        revenue: item.revenue,
+      })
+    );
 
-    // 5. Recent Orders (Latest 5 orders with user details)
+    // =====================================================
+    // 5. RECENT ORDERS
+    // =====================================================
+
     const recentOrders = await Order.find()
       .populate("user", "name email")
-      .sort({ createdAt: -1 })
+      .sort({
+        createdAt: -1,
+      })
       .limit(5);
 
-    // 6. Low Stock Products Fix: Check both 'stock' and 'Stock' fields cleanly
+    // =====================================================
+    // 6. LOW STOCK PRODUCTS
+    // =====================================================
+
     const lowStockProducts = await Product.find({
-      $or: [{ stock: { $lte: 5 } }, { Stock: { $lte: 5 } }],
+      $or: [
+        {
+          stock: {
+            $lte: 5,
+          },
+        },
+        {
+          Stock: {
+            $lte: 5,
+          },
+        },
+      ],
     })
       .select("name stock Stock price images")
       .limit(5);
 
+    // =====================================================
+    // 7. ALL PRODUCTS
+    // Admin can see every seller's product
+    // =====================================================
+
+    const allProducts = await Product.find({})
+      .sort({
+        createdAt: -1,
+      })
+      .lean();
+
+    // =====================================================
+    // 8. FINAL RESPONSE
+    // =====================================================
+
     res.status(200).json({
       success: true,
+
       stats: {
         totalUsers,
         totalProducts,
@@ -75,35 +180,63 @@ export const getAdminDashboardStats = async (req, res) => {
         delivered,
         cancelled,
       },
+
       recentOrders,
+
       lowStockProducts,
+
       monthlyRevenue: formattedMonthlyRevenue,
+
+      // IMPORTANT
+      // Frontend allProducts isi field se populate hoga
+      allProducts,
     });
   } catch (error) {
-    console.error("ADMIN DASHBOARD STATS ERROR:", error);
+    console.error(
+      "ADMIN DASHBOARD STATS ERROR:",
+      error
+    );
+
     res.status(500).json({
       success: false,
-      message: "Failed to fetch dashboard statistics",
+      message:
+        "Failed to fetch dashboard statistics",
     });
   }
 };
 
-export const getAdminProducts = async (req, res, next) => {
+// =====================================================
+// GET ADMIN PRODUCTS
+// GET /api/v1/admin/products
+// =====================================================
+
+export const getAdminProducts = async (
+  req,
+  res,
+  next
+) => {
   try {
     let query = {};
-    
-    // Agar Request Seller Kar Raha Hai, Toh Only Unke Own Products Dikhao
+
+    // Seller -> only own products
     if (req.user.role === "seller") {
       query.user = req.user._id;
     }
 
-    const products = await Product.find(query).sort({ createdAt: -1 });
+    const products = await Product.find(query)
+      .sort({
+        createdAt: -1,
+      });
 
     res.status(200).json({
       success: true,
       products,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+

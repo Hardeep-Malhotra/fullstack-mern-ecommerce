@@ -5,26 +5,53 @@ import {
   Package,
   ShoppingCart,
   Users,
-  ShieldCheck,
+  UserCheck,
   ChevronRight,
   Store,
-  Activity
+  Activity,
+  ShieldCheck,
 } from "lucide-react";
 
 const AdminSidebar = () => {
   const navItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/admin/products", label: "Products", icon: Package },
-    { path: "/admin/orders", label: "Orders", icon: ShoppingCart },
-    { path: "/admin/users", label: "Users", icon: Users },
-      { path: "/admin/system-health", label: "System Health", icon: Activity },
+    {
+      path: "/admin/dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      path: "/admin/products",
+      label: "Products",
+      icon: Package,
+    },
+    {
+      path: "/admin/orders",
+      label: "Orders",
+      icon: ShoppingCart,
+    },
+    {
+      path: "/admin/users",
+      label: "Users",
+      icon: Users,
+    },
+    {
+      path: "/admin/seller-approval",
+      label: "Seller Approval",
+      icon: UserCheck,
+    },
+    {
+      path: "/admin/system-health",
+      label: "System Health",
+      icon: Activity,
+    },
   ];
 
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 sticky top-0 h-screen">
-      {/* =====================================
+      {/* =====================================================
           BRAND
-      ===================================== */}
+      ===================================================== */}
+
       <div className="px-5 pt-6">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -32,12 +59,14 @@ const AdminSidebar = () => {
           className="flex items-center gap-3 px-2 pb-6 border-b border-slate-100"
         >
           {/* Logo */}
+
           <div className="relative">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-200">
               <ShieldCheck size={23} strokeWidth={2.3} />
             </div>
 
             {/* Online dot */}
+
             <span className="absolute -right-0.5 -bottom-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
           </div>
 
@@ -53,9 +82,10 @@ const AdminSidebar = () => {
         </motion.div>
       </div>
 
-      {/* =====================================
+      {/* =====================================================
           NAVIGATION
-      ===================================== */}
+      ===================================================== */}
+
       <div className="flex-1 px-4 py-7 overflow-y-auto">
         <p className="px-3 mb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
           Management
@@ -74,8 +104,7 @@ const AdminSidebar = () => {
               >
                 <NavLink
                   to={item.path}
-                  className={({ isActive }) =>
-                    `
+                  className={({ isActive }) => `
                     group relative flex items-center gap-3
                     px-3.5 py-3 rounded-xl
                     text-sm font-semibold
@@ -85,12 +114,12 @@ const AdminSidebar = () => {
                         ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200"
                         : "text-slate-500 hover:text-orange-600 hover:bg-orange-50/60"
                     }
-                    `
-                  }
+                  `}
                 >
                   {({ isActive }) => (
                     <>
                       {/* Active indicator */}
+
                       {isActive && (
                         <motion.div
                           layoutId="sidebar-active"
@@ -99,6 +128,7 @@ const AdminSidebar = () => {
                       )}
 
                       {/* Icon */}
+
                       <div
                         className={`
                           w-9 h-9 rounded-lg
@@ -115,9 +145,11 @@ const AdminSidebar = () => {
                       </div>
 
                       {/* Label */}
+
                       <span className="flex-1">{item.label}</span>
 
                       {/* Arrow */}
+
                       <ChevronRight
                         size={15}
                         className={`
@@ -137,13 +169,14 @@ const AdminSidebar = () => {
           })}
         </nav>
 
-        {/* =================================
+        {/* =================================================
             STORE CARD
-        ================================= */}
+        ================================================= */}
+
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
+          transition={{ delay: 0.3 }}
           className="mt-8 p-4 rounded-2xl bg-gradient-to-br from-orange-50 to-white border border-orange-100"
         >
           <div className="w-9 h-9 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-600 mb-3">
@@ -153,14 +186,15 @@ const AdminSidebar = () => {
           <p className="text-xs font-bold text-slate-900">Shopzy Store</p>
 
           <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
-            Manage your store, products and customer orders.
+            Manage your store, products, sellers and customer orders.
           </p>
         </motion.div>
       </div>
 
-      {/* =====================================
+      {/* =====================================================
           FOOTER
-      ===================================== */}
+      ===================================================== */}
+
       <div className="px-5 pb-5">
         <div className="border-t border-slate-100 pt-4">
           <div className="flex items-center justify-between">
@@ -168,6 +202,7 @@ const AdminSidebar = () => {
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Shopzy
               </p>
+
               <p className="text-[10px] text-slate-400 mt-1">Admin v1.0.0</p>
             </div>
 

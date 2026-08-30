@@ -40,7 +40,6 @@ import {
 
 import axiosInstance from "../../api/axios";
 import Loader from "../../components/common/Loader";
-import PendingSellers from "../../components/admin/PendingSellers";
 
 const AdminDashboard = () => {
   const [data, setData] = useState(null);
@@ -52,8 +51,8 @@ const AdminDashboard = () => {
   // ==============================
   // FETCH DASHBOARD DATA
   // NOTE: backend /admin/dashboard response should now also include
-  // `allProducts` (full read-only catalog) alongside existing fields.
-  // If it doesn't yet, add that array on the backend controller.
+  // `allProducts` (full catalog) alongside existing fields.
+  // If unavailable, the dashboard safely shows an empty product list.
   // ==============================
   const fetchDashboardStats = async (isRefresh = false) => {
     try {
@@ -121,7 +120,7 @@ const AdminDashboard = () => {
   // ==============================
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center bg-slate-50">
+      <div className="min-h-[70vh] flex items-center justify-center bg-white">
         <Loader />
       </div>
     );
@@ -256,7 +255,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-white text-slate-800 p-4 sm:p-6 lg:p-8">
       <div className="max-w-[1600px] mx-auto space-y-7">
         {/* HEADER — view-only dashboard, no CRUD action here */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
@@ -273,7 +272,7 @@ const AdminDashboard = () => {
             </h1>
 
             <p className="text-sm text-slate-500 mt-1">
-              Full store overview — read only. Manage products &amp; orders from the Seller Dashboard.
+              Full store overview — manage your store from the Admin Panel.
             </p>
           </div>
 
@@ -282,7 +281,7 @@ const AdminDashboard = () => {
             disabled={refreshing}
             className="
               inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl
-              border border-slate-200 bg-white hover:bg-orange-50 hover:border-orange-300
+              border border-orange-100 bg-white hover:bg-orange-50 hover:border-orange-300
               text-sm font-semibold text-slate-700 hover:text-orange-600 shadow-sm
               transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
             "
@@ -291,35 +290,18 @@ const AdminDashboard = () => {
             {refreshing ? "Refreshing..." : "Refresh Data"}
           </button>
         </div>
-
-        {/* SELLER APPROVAL — the one admin "action" that stays on this page */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 rounded-xl bg-orange-50 border border-orange-100 text-orange-600">
-              <ShieldCheck size={18} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Seller Approvals</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Review and approve pending seller accounts
-              </p>
-            </div>
-          </div>
-          <PendingSellers />
-        </div>
-
-        {/* KPI CARDS */}
+{/* KPI CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {statCards.map((card) => {
             const Icon = card.icon;
             return (
               <div
                 key={card.title}
-                className={`group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 ${card.border}`}
+                className={`group relative overflow-hidden rounded-2xl border border-orange-100 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 ${card.border}`}
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       {card.title}
                     </p>
                     <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2 tracking-tight">
@@ -343,7 +325,7 @@ const AdminDashboard = () => {
 
         {/* CHARTS SECTION */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-          <div className="xl:col-span-2 rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-sm">
+          <div className="xl:col-span-2 rounded-2xl border border-orange-100 bg-white p-5 sm:p-6 shadow-sm">
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Revenue Overview</h2>
@@ -362,7 +344,7 @@ const AdminDashboard = () => {
                     <TrendingUp size={22} className="text-orange-500" />
                   </div>
                   <p className="text-sm font-semibold text-slate-700">No revenue data</p>
-                  <p className="text-xs text-slate-400 mt-1">Revenue analytics will appear here.</p>
+                  <p className="text-xs text-slate-500 mt-1">Revenue analytics will appear here.</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -408,7 +390,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* ORDER STATUS — view only, no update controls */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+          <div className="rounded-2xl border border-orange-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col justify-between">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Order Status</h2>
               <p className="text-xs text-slate-500 mt-0.5">Current order distribution</p>
@@ -442,7 +424,7 @@ const AdminDashboard = () => {
 
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-2xl font-black text-slate-900">{formatNumber(stats?.totalOrders)}</span>
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Orders</span>
+                <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Orders</span>
               </div>
             </div>
 
@@ -453,7 +435,7 @@ const AdminDashboard = () => {
                 return (
                   <div
                     key={item.name}
-                    className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100"
+                    className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white border border-slate-100"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon size={14} style={{ color: item.color }} />
@@ -461,7 +443,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="text-right">
                       <span className="text-xs font-bold text-slate-900">{item.value}</span>
-                      <span className="text-[10px] text-slate-400 ml-1 font-semibold">({percentage})</span>
+                      <span className="text-[10px] text-slate-500 ml-1 font-semibold">({percentage})</span>
                     </div>
                   </div>
                 );
@@ -475,7 +457,7 @@ const AdminDashboard = () => {
             expose a status-change control for admin — that action belongs
             in the seller dashboard now. */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-          <div className="xl:col-span-2 rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden flex flex-col justify-between">
+          <div className="xl:col-span-2 rounded-2xl border border-orange-100 bg-white shadow-sm overflow-hidden flex flex-col justify-between">
             <div>
               <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-100">
                 <div>
@@ -497,16 +479,16 @@ const AdminDashboard = () => {
               {recentOrders.length === 0 ? (
                 <div className="py-20 flex flex-col items-center justify-center text-center">
                   <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
-                    <ShoppingBasket size={24} className="text-slate-400" />
+                    <ShoppingBasket size={24} className="text-slate-500" />
                   </div>
                   <p className="text-sm font-semibold text-slate-700">No recent orders</p>
-                  <p className="text-xs text-slate-400 mt-1">New orders will appear here.</p>
+                  <p className="text-xs text-slate-500 mt-1">New orders will appear here.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] uppercase tracking-wider text-slate-400">
+                      <tr className="border-b border-slate-100 bg-orange-50/40 text-[10px] uppercase tracking-wider text-slate-500">
                         <th className="px-5 py-3.5">Order</th>
                         <th className="px-5 py-3.5">Customer</th>
                         <th className="px-5 py-3.5">Date</th>
@@ -528,7 +510,7 @@ const AdminDashboard = () => {
                           order?.user?.avatar?.url || order?.user?.avatar || order?.user?.profileImage;
 
                         return (
-                          <tr key={order?._id} className="hover:bg-slate-50/80 transition-colors">
+                          <tr key={order?._id} className="hover:bg-white/80 transition-colors">
                             <td className="px-5 py-4">
                               <span className="font-mono text-xs font-bold text-slate-700">
                                 #{order?._id?.slice(-6) || "------"}
@@ -554,7 +536,7 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium">
-                                <Calendar size={13} className="text-slate-400" />
+                                <Calendar size={13} className="text-slate-500" />
                                 {formatDate(order?.createdAt)}
                               </div>
                             </td>
@@ -590,7 +572,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* LOW STOCK — view only, no "Manage Inventory" link anymore */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-sm min-h-[360px] flex flex-col justify-between">
+          <div className="rounded-2xl border border-orange-100 bg-white p-5 sm:p-6 shadow-sm min-h-[360px] flex flex-col justify-between">
             <div>
               <div className="flex items-start justify-between mb-5">
                 <div>
@@ -616,7 +598,7 @@ const AdminDashboard = () => {
                     <Sparkles size={22} className="text-orange-500" />
                   </div>
                   <p className="text-sm font-semibold text-slate-700">Inventory looks healthy</p>
-                  <p className="text-xs text-slate-400 mt-1">No products need restocking.</p>
+                  <p className="text-xs text-slate-500 mt-1">No products need restocking.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -627,13 +609,13 @@ const AdminDashboard = () => {
                     return (
                       <div
                         key={product?._id}
-                        className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-orange-200 transition-all"
+                        className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-slate-100 hover:border-orange-200 transition-all"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <img
                             src={image}
                             alt={product?.name || "Product"}
-                            className="w-11 h-11 rounded-xl object-cover bg-white border border-slate-200"
+                            className="w-11 h-11 rounded-xl object-cover bg-white border border-orange-100"
                           />
                           <div className="min-w-0">
                             <h4 className="text-xs font-bold text-slate-800 truncate max-w-[130px]">
@@ -657,8 +639,8 @@ const AdminDashboard = () => {
         </div>
 
         {/* ALL PRODUCTS — full read-only catalog, no add/edit/delete here.
-            Product management (add/edit/delete) lives in the Seller Dashboard. */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+            Product management is available from the Admin Products page. */}
+        <div className="rounded-2xl border border-orange-100 bg-white shadow-sm overflow-hidden">
           <div className="p-5 sm:p-6 flex items-center justify-between border-b border-slate-100">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-amber-50 border border-amber-100 text-amber-600">
@@ -667,22 +649,22 @@ const AdminDashboard = () => {
               <div>
                 <h2 className="text-lg font-bold text-slate-900">All Products</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Full catalog across all sellers — read only
+                  Full catalog across all sellers
                 </p>
               </div>
             </div>
-            <span className="text-xs font-bold text-slate-400">
-              {formatNumber(allProducts.length || stats?.totalProducts)} items
+            <span className="text-xs font-bold text-slate-500">
+              {formatNumber(allProducts.length)} items
             </span>
           </div>
 
           {allProducts.length === 0 ? (
             <div className="py-16 flex flex-col items-center justify-center text-center">
               <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
-                <Package size={22} className="text-slate-400" />
+                <Package size={22} className="text-slate-500" />
               </div>
               <p className="text-sm font-semibold text-slate-700">No products yet</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Products added by sellers will show up here.
               </p>
             </div>
@@ -690,7 +672,7 @@ const AdminDashboard = () => {
             <div className="overflow-x-auto max-h-[420px]">
               <table className="w-full text-left">
                 <thead className="sticky top-0 bg-white">
-                  <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-slate-100 bg-orange-50/40 text-[10px] uppercase tracking-wider text-slate-500">
                     <th className="px-5 py-3.5">Product</th>
                     <th className="px-5 py-3.5">Seller</th>
                     <th className="px-5 py-3.5">Category</th>
@@ -702,13 +684,13 @@ const AdminDashboard = () => {
                   {allProducts.map((product) => {
                     const image = product?.images?.[0]?.url || product?.images?.[0] || "/placeholder.png";
                     return (
-                      <tr key={product?._id} className="hover:bg-slate-50/80 transition-colors">
+                      <tr key={product?._id} className="hover:bg-white/80 transition-colors">
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
                             <img
                               src={image}
                               alt={product?.name || "Product"}
-                              className="w-9 h-9 rounded-lg object-cover bg-white border border-slate-200"
+                              className="w-9 h-9 rounded-lg object-cover bg-white border border-orange-100"
                             />
                             <span className="text-xs font-semibold text-slate-800 truncate max-w-[160px]">
                               {product?.name || "Unnamed Product"}

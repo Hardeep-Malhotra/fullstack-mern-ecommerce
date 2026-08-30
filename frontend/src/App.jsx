@@ -48,6 +48,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
 import SystemHealth from "./pages/admin/SystemHealth";
+import PendingSellers from "./components/admin/PendingSellers";
 
 // Seller Pages
 import SellerDashboard from "./pages/seller/sellerDashboard";
@@ -306,6 +307,11 @@ function AppContent() {
 
               {/* Admin Order Details */}
               <Route path="/admin/orders/:id" element={<AdminOrderDetails />} />
+
+              <Route
+                path="/admin/seller-approval"
+                element={<PendingSellers />}
+              />
 
               {/* System Health */}
               <Route path="/admin/system-health" element={<SystemHealth />} />
