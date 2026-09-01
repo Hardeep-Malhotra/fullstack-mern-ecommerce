@@ -1,7 +1,7 @@
-
 import Order from "../../models/orderModel.js";
 import Product from "../../models/productModel.js";
 import User from "../../models/userModel.js";
+import { getCache, setCache } from "../../utils/redisCache.js"; // ⚡ Redis Helper Imports
 
 // =====================================================
 // GET ADMIN DASHBOARD STATS
@@ -10,6 +10,24 @@ import User from "../../models/userModel.js";
 
 export const getAdminDashboardStats = async (req, res) => {
   try {
+    const cacheKey = "admin:dashboard:stats";
+
+    // =====================================================
+    // ⚡ 0. REDIS CACHE CHECK
+    // =====================================================
+    const cachedStats = await getCache(cacheKey);
+
+    if (cachedStats) {
+      console.log("⚡ ADMIN STATS SERVED FROM REDIS");
+      return res.status(200).json({
+        success: true,
+        ...cachedStats,
+        fromCache: true,
+      });
+    }
+
+    console.log("🟡 CACHE MISS: CALCULATING ADMIN STATS FROM MONGODB");
+
     // =====================================================
     // 1. TOTAL COUNTS
     // =====================================================
@@ -64,9 +82,7 @@ export const getAdminDashboardStats = async (req, res) => {
     ]);
 
     const totalRevenue =
-      revenueData.length > 0
-        ? revenueData[0].totalRevenue
-        : 0;
+      revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
 
     // =====================================================
     // 4. MONTHLY REVENUE
@@ -112,13 +128,10 @@ export const getAdminDashboardStats = async (req, res) => {
       "Dec",
     ];
 
-    const formattedMonthlyRevenue = monthlyRevenue.map(
-      (item) => ({
-        month:
-          monthNames[item._id - 1] || "N/A",
-        revenue: item.revenue,
-      })
-    );
+    const formattedMonthlyRevenue = monthlyRevenue.map((item) => ({
+      month: monthNames[item._id - 1] || "N/A",
+      revenue: item.revenue,
+    }));
 
     // =====================================================
     // 5. RECENT ORDERS
@@ -164,12 +177,10 @@ export const getAdminDashboardStats = async (req, res) => {
       .lean();
 
     // =====================================================
-    // 8. FINAL RESPONSE
+    // 8. CONSTRUCT RESPONSE OBJECT
     // =====================================================
 
-    res.status(200).json({
-      success: true,
-
+    const responseData = {
       stats: {
         totalUsers,
         totalProducts,
@@ -180,27 +191,33 @@ export const getAdminDashboardStats = async (req, res) => {
         delivered,
         cancelled,
       },
-
       recentOrders,
-
       lowStockProducts,
-
       monthlyRevenue: formattedMonthlyRevenue,
-
-      // IMPORTANT
-      // Frontend allProducts isi field se populate hoga
       allProducts,
+    };
+
+    // =====================================================
+    // ⚡ 9. SAVE TO REDIS (5 Min TTL)
+    // =====================================================
+    await setCache(cacheKey, responseData, 300);
+    console.log("🟢 ADMIN STATS SAVED TO REDIS CACHE");
+
+    // =====================================================
+    // SEND RESPONSE
+    // =====================================================
+
+    res.status(200).json({
+      success: true,
+      ...responseData,
+      fromCache: false,
     });
   } catch (error) {
-    console.error(
-      "ADMIN DASHBOARD STATS ERROR:",
-      error
-    );
+    console.error("ADMIN DASHBOARD STATS ERROR:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Failed to fetch dashboard statistics",
+      message: "Failed to fetch dashboard statistics",
     });
   }
 };
@@ -210,11 +227,7 @@ export const getAdminDashboardStats = async (req, res) => {
 // GET /api/v1/admin/products
 // =====================================================
 
-export const getAdminProducts = async (
-  req,
-  res,
-  next
-) => {
+export const getAdminProducts = async (req, res, next) => {
   try {
     let query = {};
 
@@ -223,10 +236,9 @@ export const getAdminProducts = async (
       query.user = req.user._id;
     }
 
-    const products = await Product.find(query)
-      .sort({
-        createdAt: -1,
-      });
+    const products = await Product.find(query).sort({
+      createdAt: -1,
+    });
 
     res.status(200).json({
       success: true,
@@ -239,4 +251,3 @@ export const getAdminProducts = async (
     });
   }
 };
-

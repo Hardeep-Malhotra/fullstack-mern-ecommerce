@@ -1,6 +1,5 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import Order from "../../models/orderModel.js";
-import Product from "../../models/productModel.js";
 
 // =====================================================
 // GET ALL ORDERS
@@ -18,75 +17,67 @@ export const getAllOrders = asyncHandler(async (req, res, next) => {
   // =====================================================
   // SELLER
   // =====================================================
-
   if (req.user?.role === "seller") {
-    console.log("🟠 SELLER ID:", req.user._id);
-
-    // Seller ke products nikalo
-    // IMPORTANT: Product me seller field hai, user nahi
-    const sellerProductIds = await Product.find({
-      seller: req.user._id,
-    }).distinct("_id");
-
-    console.log("🟠 SELLER PRODUCT IDS:", sellerProductIds);
-
-    // Agar seller ke products hi nahi hain
-    if (sellerProductIds.length === 0) {
-      return res.status(200).json({
-        success: true,
-        count: 0,
-        totalAmount: 0,
-        orders: [],
-      });
-    }
-
-    // Seller ke products wale orders find karo
+    // Direct DB query on embedded seller field with lean optimization
     orders = await Order.find({
-      "orderItems.product": {
-        $in: sellerProductIds,
-      },
-
-      isDeleted: {
-        $ne: true,
-      },
+      "orderItems.seller": req.user._id,
+      isDeleted: { $ne: true },
     })
       .populate("user", "name email")
-      .sort({ createdAt: -1 });
-
-    console.log("🟢 SELLER ORDERS FOUND:", orders.length);
+      .sort({ createdAt: -1 })
+      .lean();
   }
 
   // =====================================================
   // ADMIN
   // =====================================================
-
   else if (req.user?.role === "admin") {
-    console.log("🔵 ADMIN ORDERS REQUEST");
-
     orders = await Order.find({
-      isDeleted: {
-        $ne: true,
-      },
+      isDeleted: { $ne: true },
     })
       .populate("user", "name email")
-      .sort({ createdAt: -1 });
-
-    console.log("🔵 ADMIN ORDERS FOUND:", orders.length);
+      .sort({ createdAt: -1 })
+      .lean();
   }
 
   // =====================================================
-  // TOTAL AMOUNT
+  // TOTAL AMOUNT & SELLER FILTERING
   // =====================================================
+  let totalAmount = 0;
 
-  const totalAmount = orders.reduce(
-    (acc, order) => acc + Number(order.totalPrice || 0),
-    0
-  );
+  if (req.user?.role === "seller") {
+    // Calculate total only for this seller's items in orders
+    orders = orders.map((order) => {
+      const sellerItems = (order.orderItems || []).filter(
+        (item) => item.seller && item.seller.toString() === req.user._id.toString()
+      );
+
+      const sellerTotal = sellerItems.reduce(
+        (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+        0
+      );
+
+      if (order.orderStatus !== "Cancelled") {
+        totalAmount += sellerTotal;
+      }
+
+      return {
+        ...order,
+        orderItems: sellerItems,
+        sellerTotal: Math.round(sellerTotal * 100) / 100,
+      };
+    });
+  } else {
+    // Admin Total Calculation
+    totalAmount = orders.reduce(
+      (acc, order) => (order.orderStatus !== "Cancelled" ? acc + Number(order.totalPrice || 0) : acc),
+      0
+    );
+  }
 
   // =====================================================
   // RESPONSE
   // =====================================================
-
   res.status(200).json({
     success: true,
     count: orders.length,

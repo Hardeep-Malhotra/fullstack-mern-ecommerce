@@ -20,11 +20,15 @@ export const setCache = async (key, data, ttlSeconds = 300) => {
   }
 };
 
-// 3. Redis se Cache Delete Karne ke liye (Cache Invalidation)
 export const deleteCache = async (key) => {
   try {
-    await redisClient.del(key);
+    const result = await redisClient.del(key);
+    if (result > 0) {
+      console.log(`🗑️ REDIS CACHE CLEARED: ${key}`);
+    } else {
+      console.log(`ℹ️ NO CACHE TO CLEAR FOR KEY: ${key}`);
+    }
   } catch (error) {
-    console.error("Redis DELETE error:", error.message);
+    console.error(`❌ Redis Delete Error (${key}):`, error);
   }
 };
