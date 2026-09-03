@@ -1,39 +1,85 @@
 import rateLimit from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
+import redisClient from "../config/redis.js";
 
-// 1. Strict Limiter: Login aur Register ke liye
+// =====================================================
+// REDIS COMMAND HELPER
+// =====================================================
+
+const sendCommand = (...args) => {
+  return redisClient.sendCommand(args);
+};
+
+// =====================================================
+// 1. AUTH LIMITER
+// Login + Register
+// 10 requests / 15 minutes
+// =====================================================
+
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 Minutes
-  max: 10, // Max 10 attempts
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+
+  store: new RedisStore({
+    sendCommand,
+    prefix: "rate-limit:auth:",
+  }),
+
   message: {
     success: false,
     message:
       "Too many login/register attempts. Please try again after 15 minutes.",
   },
+
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// 2. Strict Limiter: Forgot Password ke liye (Email spamming rokne ke liye)
+// =====================================================
+// 2. PASSWORD RESET LIMITER
+// Forgot Password
+// 5 requests / 15 minutes
+// =====================================================
+
 export const passwordResetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 Minutes
-  max: 5, // Max 5 requests
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+
+  store: new RedisStore({
+    sendCommand,
+    prefix: "rate-limit:password-reset:",
+  }),
+
   message: {
     success: false,
     message:
       "Too many password reset requests. Please try again after 15 minutes.",
   },
+
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// 3. General Limiter: Baaki saare API endpoints ke liye
+// =====================================================
+// 3. GENERAL API LIMITER
+// 300 requests / 15 minutes
+// =====================================================
+
 export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 Minutes
-  max: 300, // Max 300 requests
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+
+  store: new RedisStore({
+    sendCommand,
+    prefix: "rate-limit:api:",
+  }),
+
   message: {
     success: false,
-    message: "Too many requests from this IP, please try again later.",
+    message:
+      "Too many requests from this IP, please try again later.",
   },
+
   standardHeaders: true,
   legacyHeaders: false,
 });
