@@ -32,3 +32,22 @@ export const deleteCache = async (key) => {
     console.error(`❌ Redis Delete Error (${key}):`, error);
   }
 };
+
+export const deleteCacheByPattern = async (pattern) => {
+  try {
+    const keys = await redisClient.keys(pattern);
+
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+      console.log(`🗑️ REDIS CACHE CLEARED: ${pattern}`);
+    } else {
+      console.log(`ℹ️ NO CACHE FOUND FOR: ${pattern}`);
+    }
+
+  } catch (error) {
+    console.error(
+      `❌ Redis Pattern Delete Error (${pattern}):`,
+      error.message
+    );
+  }
+};

@@ -1,5 +1,3 @@
-
-
 // import Product from "../../models/productModel.js";
 // import asyncHandler from "../../middlewares/asyncHandler.js";
 // import cloudinary from "../../config/cloudinary.js";
@@ -68,6 +66,7 @@
 import Product from "../../models/productModel.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import cloudinary from "../../config/cloudinary.js";
+import { deleteCacheByPattern } from "../../utils/redisCache.js";
 
 export const createProducts = asyncHandler(async (req, res) => {
   // =====================================================
@@ -100,13 +99,14 @@ export const createProducts = asyncHandler(async (req, res) => {
             },
           ],
         },
+
         (error, result) => {
           if (error) {
             reject(error);
           } else {
             resolve(result);
           }
-        }
+        },
       );
 
       uploadStream.end(file.buffer);
@@ -122,16 +122,7 @@ export const createProducts = asyncHandler(async (req, res) => {
   // 3. SET PRODUCT OWNER
   // =====================================================
 
-  // IMPORTANT:
-  // Seller ID backend se automatically aayegi.
-  // Frontend ko seller ID bhejne ki zarurat nahi hai.
-
   req.body.seller = req.user._id;
-
-  // Agar tumhare existing Product model mein `user`
-  // field bhi hai, to backward compatibility ke liye
-  // ye bhi rakh sakte ho.
-  req.body.user = req.user._id;
 
   // =====================================================
   // 4. SET IMAGES
@@ -146,7 +137,13 @@ export const createProducts = asyncHandler(async (req, res) => {
   const product = await Product.create(req.body);
 
   // =====================================================
-  // 6. RESPONSE
+  // 6. CLEAR PRODUCT LIST CACHE
+  // =====================================================
+
+  await deleteCacheByPattern("products:*");
+
+  // =====================================================
+  // 7. RESPONSE
   // =====================================================
 
   res.status(201).json({
