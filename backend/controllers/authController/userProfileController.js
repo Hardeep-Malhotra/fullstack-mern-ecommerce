@@ -1,6 +1,8 @@
+import jwt from "jsonwebtoken";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import ErrorHandler from "../../utils/errorHandler.js";
 import User from "../../models/userModel.js";
+import { blacklistToken } from "../../utils/redisCache.js";
 
 // @desc    Get Currently Logged-in User Profile
 // @route   GET /api/v1/auth/me
@@ -18,11 +20,39 @@ export const getUserProfile = asyncHandler(async (req, res, next) => {
 // @desc    Logout User & Clear Cookie
 // @route   GET /api/v1/auth/logout
 // @access  Public
+
 export const logoutUser = asyncHandler(async (req, res, next) => {
-  res.cookie("token", null, {
-    expires: new Date(Date.now()),
+  const token = req.cookies?.token;
+
+  if (token) {
+    try {
+      // Decode token only to get expiry time
+      const decoded = jwt.decode(token);
+
+      if (decoded?.exp) {
+        // JWT exp is in seconds
+        const currentTime = Math.floor(Date.now() / 1000);
+
+        // Remaining lifetime of token
+        const ttlSeconds = decoded.exp - currentTime;
+
+        console.log("⏳ Token TTL:", ttlSeconds);
+
+        // Only blacklist if token is still alive
+        if (ttlSeconds > 0) {
+          await blacklistToken(token, ttlSeconds);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Logout blacklist error:", error.message);
+    }
+  }
+
+ // Clear authentication cookie
+  res.clearCookie("token", {
     httpOnly: true,
   });
+
 
   res.status(200).json({
     success: true,
