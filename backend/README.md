@@ -4571,3 +4571,70 @@ a solid, secure foundation ready to scale toward production.
 **Cart → Shipping → Payment → Razorpay → Signature Verification → Order Creation → Stock Update → Cart Clear → My Orders**
 
 </div>
+# 🔐 Redis Authentication & Security
+
+NexusCart-AI uses Redis not only for caching, but also for improving API security.
+
+## 🛡️ Rate Limiting
+
+`rate-limit-redis` stores API request counters in Redis.
+
+```text
+Client
+  ↓
+Rate Limiter
+  ↓
+Redis Counter
+  ↓
+Allow / Block
+```
+
+Implemented limits:
+
+* **Auth:** 10 requests / 15 minutes
+* **Password Reset:** 5 requests / 15 minutes
+* **General API:** 300 requests / 15 minutes
+
+Exceeding the limit returns:
+
+```text
+429 Too Many Requests
+```
+
+## 🔐 JWT Blacklisting
+
+When a user logs out, the JWT is automatically added to a Redis blacklist.
+
+```text
+Logout
+  ↓
+JWT Token
+  ↓
+Redis Blacklist
+  ↓
+Cookie Cleared
+```
+
+The blacklist uses the token's **remaining lifetime as Redis TTL**, so the blacklist entry automatically expires when the JWT would have expired.
+
+```text
+blacklist:<token>
+        ↓
+"blacklisted"
+        ↓
+TTL = Remaining JWT Lifetime
+```
+
+On every authenticated request, the backend checks Redis. If the token is blacklisted, access is rejected.
+
+## 🎯 Benefits
+
+* 🛡️ Protects APIs from excessive requests
+* 🔐 Prevents reuse of logged-out JWT tokens
+* ⚡ Uses fast Redis storage
+* ⏳ Automatically removes expired blacklist entries
+* 📈 Supports scalable, shared rate limiting
+
+### Core Concept
+
+> **Redis provides fast security state management for rate limiting and JWT revocation.**
