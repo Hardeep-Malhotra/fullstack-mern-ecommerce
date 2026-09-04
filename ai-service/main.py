@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+from config.db import products_collection
 from services.ai_service import ask_ai
 
 
