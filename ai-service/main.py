@@ -1,12 +1,21 @@
+import os
+
 from fastapi import FastAPI
 from pydantic import BaseModel
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+
 app = FastAPI()
 
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
-# Structure of Request Body
 
 class ChatRequest(BaseModel):
-    message:str
+    message: str
 
 
 @app.get("/")
@@ -18,8 +27,14 @@ def home():
 
 
 @app.post("/ai/chat")
-def ai_chat(data:ChatRequest):
+def ai_chat(data: ChatRequest):
+
+    response = client.responses.create(
+        model="gpt-5.6-luna",
+        input=data.message
+    )
+
     return {
         "success": True,
-        "user_message": data.message
+        "message": response.output_text
     }
