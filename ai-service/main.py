@@ -8,8 +8,10 @@ from services.semantic_search import semantic_search_products
 app = FastAPI(title="NexusCart AI Service")
 
 
+# UPDATE: Added session_id with default value
 class ChatRequest(BaseModel):
     message: str
+    session_id: str = "default_session"
 
 
 @app.get("/")
@@ -21,11 +23,15 @@ def home():
 
 
 @app.post("/ai/chat")
-def ai_chat(data: ChatRequest):
-    answer = ask_ai(data.message)
+async def chat_endpoint(request: ChatRequest):
+    response = ask_ai(
+        request.message,
+        request.session_id
+    )
+
     return {
         "success": True,
-        "message": answer
+        "message": response
     }
 
 
