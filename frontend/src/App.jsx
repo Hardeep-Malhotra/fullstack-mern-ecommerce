@@ -377,7 +377,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import SellerLayout from "./components/seller/SellerLayout";
 
 // AI Chatbot
-import NexusCartChatbot from "./components/AIFeatures/AIShoppingAssistant";
+import AIShoppingAssistant from "./components/AIFeatures/AIShoppingAssistant";
 
 // Public Pages
 import Home from "./pages/Home";
@@ -688,7 +688,7 @@ function AppContent() {
           Hide on Admin + Seller
       ===================================== */}
 
-      {!isDashboardRoute && <NexusCartChatbot />}
+      {!isDashboardRoute && <AIShoppingAssistant />}
 
       {/* =====================================
           FOOTER
