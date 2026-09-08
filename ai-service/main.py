@@ -24,14 +24,29 @@ def home():
 
 @app.post("/ai/chat")
 async def chat_endpoint(request: ChatRequest):
+
     response = ask_ai(
+
         request.message,
+
         request.session_id
     )
 
     return {
+
         "success": True,
-        "message": response
+
+        "message": response.get(
+            "message",
+            "Sorry, kuch problem aa gayi."
+        ),
+
+        "products": response.get(
+            "products",
+            []
+        ),
+
+        "session_id": request.session_id
     }
 
 
