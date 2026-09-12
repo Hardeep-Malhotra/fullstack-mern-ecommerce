@@ -1,5 +1,3 @@
-
-
 import mongoose from "mongoose";
 
 const orderItemSchema = new mongoose.Schema(
@@ -22,7 +20,6 @@ const orderItemSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-
     },
   },
   { _id: false },
@@ -89,18 +86,39 @@ const orderSchema = new mongoose.Schema(
     },
     statusHistory: [statusHistorySchema],
     deliveredAt: Date,
+    // ==========================================================
+    // ADMIN SOFT DELETE
+    // ==========================================================
+
     isDeleted: {
       type: Boolean,
       default: false,
       index: true,
     },
+
     deletedAt: {
       type: Date,
       default: null,
     },
+
     deletedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
+    },
+
+    // ==========================================================
+    // USER HIDE ORDER
+    // ==========================================================
+
+    isHiddenByUser: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    hiddenByUserAt: {
+      type: Date,
       default: null,
     },
   },

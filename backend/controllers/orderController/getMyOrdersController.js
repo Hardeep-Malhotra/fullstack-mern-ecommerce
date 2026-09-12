@@ -1,10 +1,26 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/errorHandler.js";
 import Order from "../../models/orderModel.js";
 
-// Get Logged-in User Orders -> GET /api/v1/orders/me
+// =====================================================
+// GET LOGGED-IN USER ORDERS
+// GET /api/v1/orders/me
+//
+// Only show orders:
+// 1. Belonging to logged-in user
+// 2. Not deleted by admin
+// 3. Not hidden by the user
+// =====================================================
+
 export const myOrders = asyncHandler(async (req, res, next) => {
-  const orders = await Order.find({ user: req.user._id  , isDeleted: {$ne: true},}).sort({
+  const orders = await Order.find({
+    user: req.user._id,
+
+    // Admin deleted orders should not be visible
+    isDeleted: { $ne: true },
+
+    // Orders hidden/removed by user should not be visible
+    isHiddenByUser: { $ne: true },
+  }).sort({
     createdAt: -1,
   });
 
