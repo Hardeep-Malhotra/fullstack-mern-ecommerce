@@ -129,7 +129,7 @@ const SellerOrderDetails = () => {
     if (!id || updating || !nextStatus) return;
 
     if (
-      !["Processing", "Shipped", "Delivered", "Cancelled"].includes(nextStatus)
+      !["Processing", "Shipped", "Delivered"].includes(nextStatus)
     ) {
       toast.error("Invalid order status");
       return;
@@ -868,8 +868,10 @@ const SellerOrderDetails = () => {
                       <option value="Processing">Processing</option>
                       <option value="Shipped">Shipped</option>
                       <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
                     </select>
+                    <p className="text-[11px] text-slate-400 mt-1.5">
+                      Cancelling an order is done by the customer or admin, not from here.
+                    </p>
                   </div>
 
                   <div>

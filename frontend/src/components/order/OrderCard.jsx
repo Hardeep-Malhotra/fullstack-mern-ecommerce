@@ -1,10 +1,23 @@
-
 import { useNavigate } from "react-router-dom";
 import OrderStatus from "./OrderStatus";
-import { ArrowRight,  } from "lucide-react";
+import { ArrowRight, Trash2 } from "lucide-react";
 
-const OrderCard = ({ order }) => {
+const OrderCard = ({ order, onDelete }) => {
   const navigate = useNavigate();
+
+  // Navigation Handler
+  const handleViewDetails = (e) => {
+    e.stopPropagation();
+    navigate(`/order/${order._id}`);
+  };
+
+  // Delete/Hide Modal Trigger Handler
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(order._id);
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -18,7 +31,20 @@ const OrderCard = ({ order }) => {
             #{order._id?.slice(-8).toUpperCase()}
           </p>
         </div>
-        <OrderStatus status={order.orderStatus} />
+
+        <div className="flex items-center gap-2">
+          <OrderStatus status={order.orderStatus} />
+
+          {/* TRASH / REMOVE BUTTON */}
+          <button
+            type="button"
+            onClick={handleDeleteClick}
+            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            title="Remove from history"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Items Preview */}
@@ -51,9 +77,11 @@ const OrderCard = ({ order }) => {
           </strong>
         </div>
 
+        {/* VIEW DETAILS BUTTON */}
         <button
-          onClick={() => navigate(`/order/${order._id}`)}
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-orange-500 hover:text-white px-4 py-2 rounded-xl transition-all duration-200"
+          type="button"
+          onClick={handleViewDetails}
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-orange-500 hover:text-white px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer"
         >
           View Details <ArrowRight size={14} />
         </button>

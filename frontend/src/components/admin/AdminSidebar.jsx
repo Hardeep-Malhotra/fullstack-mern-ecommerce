@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
+
 import { motion } from "framer-motion";
+
 import {
   LayoutDashboard,
   Package,
@@ -10,6 +12,7 @@ import {
   Store,
   Activity,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 
 const AdminSidebar = () => {
@@ -18,31 +21,53 @@ const AdminSidebar = () => {
       path: "/admin/dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
+      end: true,
     },
     {
       path: "/admin/products",
       label: "Products",
       icon: Package,
+      // has a child route: /admin/products/:id — must not stay
+      // highlighted while viewing a single product's details page.
+      end: true,
     },
     {
       path: "/admin/orders",
       label: "Orders",
       icon: ShoppingCart,
+      // has child routes: /admin/orders/:id and /admin/orders/deleted —
+      // without `end`, both this and "Order Trash" light up together.
+      end: true,
     },
+
+    // ==========================================
+    // ORDER TRASH
+    // ==========================================
+
+    {
+      path: "/admin/orders/deleted",
+      label: "Order Trash",
+      icon: Trash2,
+      end: true,
+    },
+
     {
       path: "/admin/users",
       label: "Users",
       icon: Users,
+      end: true,
     },
     {
       path: "/admin/seller-approval",
       label: "Seller Approval",
       icon: UserCheck,
+      end: true,
     },
     {
       path: "/admin/system-health",
       label: "System Health",
       icon: Activity,
+      end: true,
     },
   ];
 
@@ -76,7 +101,9 @@ const AdminSidebar = () => {
             </h2>
 
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[11px] text-slate-400">Admin Panel</span>
+              <span className="text-[11px] text-slate-400">
+                Admin Panel
+              </span>
             </div>
           </div>
         </motion.div>
@@ -104,11 +131,13 @@ const AdminSidebar = () => {
               >
                 <NavLink
                   to={item.path}
+                  end={item.end}
                   className={({ isActive }) => `
                     group relative flex items-center gap-3
                     px-3.5 py-3 rounded-xl
                     text-sm font-semibold
                     transition-all duration-200
+
                     ${
                       isActive
                         ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200"
@@ -134,6 +163,7 @@ const AdminSidebar = () => {
                           w-9 h-9 rounded-lg
                           flex items-center justify-center
                           transition-all
+
                           ${
                             isActive
                               ? "bg-white/15"
@@ -146,7 +176,9 @@ const AdminSidebar = () => {
 
                       {/* Label */}
 
-                      <span className="flex-1">{item.label}</span>
+                      <span className="flex-1">
+                        {item.label}
+                      </span>
 
                       {/* Arrow */}
 
@@ -154,6 +186,7 @@ const AdminSidebar = () => {
                         size={15}
                         className={`
                           transition-all duration-200
+
                           ${
                             isActive
                               ? "opacity-100 translate-x-0"
@@ -183,7 +216,9 @@ const AdminSidebar = () => {
             <Store size={18} />
           </div>
 
-          <p className="text-xs font-bold text-slate-900">Shopzy Store</p>
+          <p className="text-xs font-bold text-slate-900">
+            Shopzy Store
+          </p>
 
           <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
             Manage your store, products, sellers and customer orders.
@@ -203,11 +238,16 @@ const AdminSidebar = () => {
                 Shopzy
               </p>
 
-              <p className="text-[10px] text-slate-400 mt-1">Admin v1.0.0</p>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Admin v1.0.0
+              </p>
             </div>
 
             <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-              <ShieldCheck size={15} className="text-orange-500" />
+              <ShieldCheck
+                size={15}
+                className="text-orange-500"
+              />
             </div>
           </div>
         </div>
