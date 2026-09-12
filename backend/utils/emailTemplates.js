@@ -394,3 +394,561 @@ export const passwordChangedTemplate = (userName) => {
     </div>
   `;
 };
+
+// ============================================
+// SELLER REGISTRATION PENDING EMAIL
+// ============================================
+
+export const sellerPendingEmailTemplate = (name, email) => {
+  return `
+    <div style="
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    ">
+      
+      <h2>Welcome to NexusCart AI! 🚀</h2>
+
+      <p>Hello <strong>${name}</strong>,</p>
+
+      <p>
+        Thank you for registering as a seller on
+        <strong>NexusCart AI</strong>.
+      </p>
+
+      <p>
+        Your seller account request has been successfully submitted.
+      </p>
+
+      <div style="
+        background: #fff3cd;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      ">
+        ⏳ <strong>Your account is currently pending admin approval.</strong>
+      </div>
+
+      <p>
+        Our admin team will review your seller application.
+        You will receive another email once your account is approved.
+      </p>
+
+      <hr />
+
+      <p>
+        Registered Email:
+        <strong>${email}</strong>
+      </p>
+
+      <p>
+        Thanks,<br />
+        <strong>NexusCart AI Team</strong>
+      </p>
+
+    </div>
+  `;
+};
+
+
+// ============================================
+// SELLER APPROVED EMAIL
+// ============================================
+
+export const sellerApprovedEmailTemplate = (name) => {
+  return `
+    <div style="
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    ">
+
+      <h2>🎉 Congratulations, ${name}!</h2>
+
+      <p>
+        Your seller account on
+        <strong>NexusCart AI</strong>
+        has been approved.
+      </p>
+
+      <div style="
+        background: #d4edda;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      ">
+        ✅ <strong>Your seller account is now active!</strong>
+      </div>
+
+      <p>
+        You can now access your seller dashboard and start managing
+        your products and business.
+      </p>
+
+      <p>
+        Thank you for joining NexusCart AI.
+      </p>
+
+      <hr />
+
+      <p>
+        Best regards,<br />
+        <strong>NexusCart AI Team</strong>
+      </p>
+
+    </div>
+  `;
+};
+
+export const sellerRejectedEmailTemplate = (name) => {
+  return `
+    <div style="
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    ">
+
+      <h2>Seller Application Update</h2>
+
+      <p>Hello <strong>${name}</strong>,</p>
+
+      <p>
+        Thank you for your interest in becoming a seller on
+        <strong>NexusCart AI</strong>.
+      </p>
+
+      <div style="
+        background: #f8d7da;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      ">
+        ❌ <strong>
+          Unfortunately, your seller application was not approved.
+        </strong>
+      </div>
+
+      <p>
+        You may contact our support team for more information.
+      </p>
+
+      <p>
+        Thank you for your understanding.
+      </p>
+
+      <hr />
+
+      <p>
+        Best Regards,<br />
+        <strong>NexusCart AI Team</strong>
+      </p>
+
+    </div>
+  `;
+};
+// ============================================
+// 📦 ORDER PLACED / ORDER CONFIRMATION EMAIL
+// ============================================
+
+export const orderPlacedEmailTemplate = (name, order) => {
+
+  const productsHtml = order.orderItems
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+            ${item.name}
+          </td>
+
+          <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+            ₹${item.price}
+          </td>
+
+          <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+            ${item.quantity}
+          </td>
+
+          <td style="padding: 12px; border-bottom: 1px solid #ddd;">
+            ₹${item.price * item.quantity}
+          </td>
+        </tr>
+      `
+    )
+    .join("");
+
+  return `
+    <div style="
+      font-family: Arial, sans-serif;
+      max-width: 650px;
+      margin: auto;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      color: #333;
+    ">
+
+      <!-- HEADER -->
+
+      <h2 style="text-align: center;">
+        🎉 Order Confirmed!
+      </h2>
+
+      <p>
+        Hello <strong>${name}</strong>,
+      </p>
+
+      <p>
+        Thank you for shopping with
+        <strong>NexusCart AI</strong>.
+      </p>
+
+      <p>
+        Your order has been successfully placed and is now being processed.
+      </p>
+
+
+      <!-- ORDER INFO -->
+
+      <div style="
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      ">
+
+        <p>
+          <strong>Order ID:</strong>
+          ${order._id}
+        </p>
+
+        <p>
+          <strong>Order Status:</strong>
+          Processing
+        </p>
+
+        <p>
+          <strong>Order Date:</strong>
+          ${new Date(order.createdAt).toLocaleString()}
+        </p>
+
+      </div>
+
+
+      <!-- PRODUCTS -->
+
+      <h3>🛍️ Order Items</h3>
+
+      <table
+        width="100%"
+        cellspacing="0"
+        cellpadding="0"
+        style="
+          border-collapse: collapse;
+          margin-top: 10px;
+        "
+      >
+
+        <thead>
+
+          <tr style="background: #eee;">
+
+            <th style="padding: 12px; text-align: left;">
+              Product
+            </th>
+
+            <th style="padding: 12px;">
+              Price
+            </th>
+
+            <th style="padding: 12px;">
+              Qty
+            </th>
+
+            <th style="padding: 12px;">
+              Total
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${productsHtml}
+
+        </tbody>
+
+      </table>
+
+
+      <!-- PRICE SUMMARY -->
+
+      <div style="
+        margin-top: 25px;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 8px;
+      ">
+
+        <h3>💰 Payment Summary</h3>
+
+        <p>
+          Items Price:
+          <strong>₹${order.itemsPrice}</strong>
+        </p>
+
+        <p>
+          Tax:
+          <strong>₹${order.taxPrice}</strong>
+        </p>
+
+        <p>
+          Shipping:
+          <strong>₹${order.shippingPrice}</strong>
+        </p>
+
+        <hr />
+
+        <h3>
+          Total Amount:
+          ₹${order.totalPrice}
+        </h3>
+
+      </div>
+
+
+      <!-- SHIPPING INFO -->
+
+      <div style="
+        margin-top: 25px;
+      ">
+
+        <h3>📍 Shipping Address</h3>
+
+        <p>
+          ${order.shippingInfo.address},
+          ${order.shippingInfo.city},
+          ${order.shippingInfo.state}
+        </p>
+
+        <p>
+          ${order.shippingInfo.country}
+          - ${order.shippingInfo.pinCode}
+        </p>
+
+        <p>
+          📞 ${order.shippingInfo.phoneNo}
+        </p>
+
+      </div>
+
+
+      <!-- FOOTER -->
+
+      <hr style="margin-top: 30px;" />
+
+      <p>
+        We will notify you when your order status changes.
+      </p>
+
+      <p>
+        Thank you for shopping with us! ❤️
+      </p>
+
+      <p>
+        <strong>
+          NexusCart AI Team
+        </strong>
+      </p>
+
+    </div>
+  `;
+};
+// ============================================
+// ORDER CANCELLED EMAIL
+// ============================================
+
+export const orderCancelledEmailTemplate = (
+  name,
+  order,
+  reason,
+  comment,
+) => {
+  return `
+    <div style="
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    ">
+
+      <h2>❌ Order Cancelled</h2>
+
+      <p>Hello <strong>${name}</strong>,</p>
+
+      <p>
+        Your order on <strong>NexusCart AI</strong> has been successfully cancelled.
+      </p>
+
+      <div style="
+        background: #f8d7da;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      ">
+
+        <strong>Order ID:</strong> ${order._id}
+        <br />
+
+        <strong>Order Status:</strong> Cancelled
+
+      </div>
+
+      <h3>Cancellation Details</h3>
+
+      <p>
+        <strong>Reason:</strong> ${reason}
+      </p>
+
+      ${
+        comment
+          ? `
+        <p>
+          <strong>Additional Comment:</strong> ${comment}
+        </p>
+      `
+          : ""
+      }
+
+      <p>
+        If you have any questions regarding your cancelled order,
+        please contact our support team.
+      </p>
+
+      <hr />
+
+      <p>
+        Thank you,<br />
+        <strong>NexusCart AI Team</strong>
+      </p>
+
+    </div>
+  `;
+};
+
+// ============================================
+// ORDER STATUS UPDATE EMAIL
+// ============================================
+
+export const orderStatusEmailTemplate = (
+  name,
+  order,
+  status,
+  comment
+) => {
+  return `
+    <div style="
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    ">
+
+      <h2>📦 Order Status Updated</h2>
+
+      <p>
+        Hello <strong>${name}</strong>,
+      </p>
+
+      <p>
+        The status of your order has been updated.
+      </p>
+
+      <div style="
+        background: #f1f5f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      ">
+
+        <p>
+          <strong>Order ID:</strong>
+          ${order._id}
+        </p>
+
+        <p>
+          <strong>New Status:</strong>
+          ${status}
+        </p>
+
+        ${
+          comment
+            ? `
+          <p>
+            <strong>Message:</strong>
+            ${comment}
+          </p>
+        `
+            : ""
+        }
+
+      </div>
+
+      ${
+        status === "Processing"
+          ? `
+            <p>
+              ⏳ Your order is currently being processed.
+            </p>
+          `
+          : ""
+      }
+
+      ${
+        status === "Shipped"
+          ? `
+            <p>
+              🚚 Great news! Your order has been shipped and is on its way.
+            </p>
+          `
+          : ""
+      }
+
+      ${
+        status === "Delivered"
+          ? `
+            <p>
+              🎉 Your order has been successfully delivered.
+            </p>
+
+            <p>
+              Thank you for shopping with us!
+            </p>
+          `
+          : ""
+      }
+
+      <hr />
+
+      <p>
+        Thanks,<br />
+
+        <strong>NexusCart AI Team</strong>
+      </p>
+
+    </div>
+  `;
+};
