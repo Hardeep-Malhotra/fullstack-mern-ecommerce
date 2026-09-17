@@ -19,9 +19,14 @@ import {
 
 import {
   getProductDetails,
+  getProductReviews,
   clearProduct,
+  createProductReview,
 } from "../redux/slices/productSlice";
 import { addItemToCart } from "../redux/slices/cartSlice";
+import ReviewForm from "../components/review/ReviewForm";
+import ReviewList from "../components/review/ReviewList";
+import RatingSummary from "../components/review/Ratingsummary";
 
 const getHighResImage = (url) => {
   if (!url) return "/placeholder.png";
@@ -36,11 +41,19 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { product, productLoading, productError } = useSelector(
-    (state) => state.product
-  );
+  const {
+    product,
+    productLoading,
+    productError,
+
+    reviews,
+    reviewsLoading,
+
+    reviewLoading,
+  } = useSelector((state) => state.product);
+
   const { loading: cartLoading, error: cartError } = useSelector(
-    (state) => state.cart
+    (state) => state.cart,
   );
 
   const [quantity, setQuantity] = useState(1);
@@ -55,7 +68,11 @@ const ProductDetails = () => {
 
   useEffect(() => {
     if (id) {
+      // Product details
       dispatch(getProductDetails(id));
+
+      // Product reviews (dedicated endpoint — reliable refresh source)
+      dispatch(getProductReviews(id));
     }
     return () => {
       dispatch(clearProduct());
@@ -68,9 +85,7 @@ const ProductDetails = () => {
     }
   }, [cartError]);
 
-  // ==========================================
-  // ZOOM HANDLERS — mouse (desktop) + touch (mobile)
-  // ==========================================
+  // Handle Zoom logic (Desktop + Mobile)
   const handleMouseMove = (e) => {
     if (!imageRef.current) return;
     const rect = imageRef.current.getBoundingClientRect();
@@ -94,14 +109,14 @@ const ProductDetails = () => {
     });
   };
 
+  // Cart & Purchase Handlers
   const handleAddToCart = async () => {
+    if (!product?._id) return;
     if (product.stock <= 0) return toast.error("Product is out of stock");
     if (quantity > product.stock)
       return toast.error(`Only ${product.stock} items available`);
 
-    const result = await dispatch(
-      addItemToCart({ id: product._id, quantity })
-    );
+    const result = await dispatch(addItemToCart({ id: product._id, quantity }));
 
     if (addItemToCart.fulfilled.match(result)) {
       toast.success("Added to cart");
@@ -109,14 +124,38 @@ const ProductDetails = () => {
   };
 
   const handleBuyNow = async () => {
+    if (!product?._id) return;
     if (product.stock <= 0) return toast.error("Product is out of stock");
 
-    const result = await dispatch(
-      addItemToCart({ id: product._id, quantity })
-    );
+    const result = await dispatch(addItemToCart({ id: product._id, quantity }));
 
     if (addItemToCart.fulfilled.match(result)) {
       navigate("/cart");
+    }
+  };
+
+  // Review Submission Handler
+  const handleSubmitReview = async (reviewData) => {
+    if (!product?._id) return;
+
+    try {
+      await dispatch(
+        createProductReview({
+          productId: product._id,
+          rating: reviewData.rating,
+          comment: reviewData.comment,
+        }),
+      ).unwrap();
+
+      toast.success("Review submitted successfully");
+
+      // Refresh product (ratings/numberOfReviews on the product doc)
+      dispatch(getProductDetails(product._id));
+
+      // Refresh reviews list (this is what ReviewList actually renders)
+      dispatch(getProductReviews(product._id));
+    } catch (error) {
+      toast.error(error || "Failed to submit review");
     }
   };
 
@@ -156,9 +195,15 @@ const ProductDetails = () => {
   const currentImage = images[selectedImage]?.url || "/placeholder.png";
   const hdImage = getHighResImage(currentImage);
 
+  const averageRating = reviews.length
+    ? (
+        reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) /
+        reviews.length
+      ).toFixed(1)
+    : Number(product.ratings || 0).toFixed(1);
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 lg:py-8 font-sans antialiased text-slate-800">
-
       {/* BREADCRUMB */}
       <motion.nav
         initial={{ opacity: 0, y: -6 }}
@@ -166,16 +211,21 @@ const ProductDetails = () => {
         transition={{ duration: 0.3 }}
         className="flex items-center gap-2 text-xs text-slate-400 mb-6"
       >
-        <Link to="/" className="hover:text-slate-700 transition">Home</Link>
+        <Link to="/" className="hover:text-slate-700 transition">
+          Home
+        </Link>
         <span>/</span>
-        <Link to="/products" className="hover:text-slate-700 transition">Shop</Link>
+        <Link to="/products" className="hover:text-slate-700 transition">
+          Shop
+        </Link>
         <span>/</span>
-        <span className="text-slate-700 font-medium truncate max-w-[200px]">{product.name}</span>
+        <span className="text-slate-700 font-medium truncate max-w-[200px]">
+          {product.name}
+        </span>
       </motion.nav>
 
       {/* MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-
         {/* GALLERY */}
         <motion.div
           initial={{ opacity: 0, x: -16 }}
@@ -201,7 +251,7 @@ const ProductDetails = () => {
               }`}
             />
 
-            {/* DESKTOP LENS BOX — marks where you're zoomed into */}
+            {/* DESKTOP LENS BOX */}
             {isZooming && (
               <div
                 className="hidden lg:block absolute w-28 h-28 border-2 border-orange-500/80 bg-orange-500/10 pointer-events-none rounded-lg shadow-sm"
@@ -213,7 +263,7 @@ const ProductDetails = () => {
               />
             )}
 
-            {/* MOBILE — zoom stays INSIDE this same card, no separate popup */}
+            {/* MOBILE ZOOM INSIDE CARD */}
             <div
               className="lg:hidden absolute inset-0 w-full h-full bg-no-repeat pointer-events-none bg-slate-50 transition-opacity duration-150"
               style={{
@@ -231,7 +281,7 @@ const ProductDetails = () => {
             )}
           </div>
 
-          {/* DESKTOP SIDE ZOOM PANEL — only shows on lg+, mobile never gets this */}
+          {/* DESKTOP SIDE ZOOM PANEL */}
           <AnimatePresence>
             {isZooming && (
               <motion.div
@@ -264,7 +314,11 @@ const ProductDetails = () => {
                       : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
-                  <img src={img.url} alt="" className="w-full h-full object-contain p-1" />
+                  <img
+                    src={img.url}
+                    alt=""
+                    className="w-full h-full object-contain p-1"
+                  />
                 </motion.button>
               ))}
             </div>
@@ -288,7 +342,10 @@ const ProductDetails = () => {
                 onClick={() => setWishlisted(!wishlisted)}
                 className="p-2 text-slate-400 hover:text-rose-500 rounded-full hover:bg-slate-50 transition"
               >
-                <Heart size={18} className={wishlisted ? "fill-rose-500 text-rose-500" : ""} />
+                <Heart
+                  size={18}
+                  className={wishlisted ? "fill-rose-500 text-rose-500" : ""}
+                />
               </motion.button>
             </div>
 
@@ -300,11 +357,11 @@ const ProductDetails = () => {
             <div className="flex items-center gap-2 mt-2 text-xs">
               <div className="flex items-center gap-1 bg-amber-500 text-white px-2 py-0.5 rounded font-bold">
                 <Star size={11} className="fill-white" />
-                <span>{product.ratings || "4.8"}</span>
+                <span>{averageRating}</span>
               </div>
               <span className="text-slate-400">•</span>
               <span className="text-slate-500 font-medium">
-                {product.numberOfReviews || 0} reviews
+                {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
               </span>
             </div>
 
@@ -313,7 +370,9 @@ const ProductDetails = () => {
               <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
                 ₹{Number(product.price).toLocaleString("en-IN")}
               </span>
-              <span className="text-xs text-slate-400">Inclusive of all taxes</span>
+              <span className="text-xs text-slate-400">
+                Inclusive of all taxes
+              </span>
             </div>
 
             {/* IN STOCK BAR */}
@@ -349,7 +408,9 @@ const ProductDetails = () => {
                   </span>
                   <motion.button
                     whileTap={{ scale: 0.85 }}
-                    onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                    onClick={() =>
+                      setQuantity((q) => Math.min(product.stock, q + 1))
+                    }
                     disabled={quantity >= product.stock}
                     className="p-2 hover:bg-slate-200/60 disabled:opacity-30 text-slate-600"
                   >
@@ -381,7 +442,7 @@ const ProductDetails = () => {
               </motion.button>
             </div>
 
-            {/* PERKS / TRUST BADGES */}
+            {/* TRUST BADGES */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -463,7 +524,9 @@ const ProductDetails = () => {
               <div className="max-w-md grid grid-cols-2 gap-y-2 text-slate-700">
                 <span className="font-medium text-slate-400">Category</span>
                 <span>{product.category}</span>
-                <span className="font-medium text-slate-400">Stock Available</span>
+                <span className="font-medium text-slate-400">
+                  Stock Available
+                </span>
                 <span>{product.stock} items</span>
                 <span className="font-medium text-slate-400">Product ID</span>
                 <span className="font-mono text-[10px]">{product._id}</span>
@@ -473,6 +536,35 @@ const ProductDetails = () => {
         </AnimatePresence>
       </motion.div>
 
+      {/* CUSTOMER REVIEWS */}
+      <section className="mt-12 pt-8 border-t border-slate-200">
+        <h2 className="text-2xl font-bold text-slate-900 mb-6">
+          Customer Reviews
+        </h2>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* LEFT: Rating summary */}
+          <div className="lg:col-span-4">
+            <RatingSummary reviews={reviews} />
+          </div>
+
+          {/* RIGHT: Search/sort/list + write-a-review */}
+          <div className="lg:col-span-8 space-y-6">
+            {reviewsLoading ? (
+              <div className="py-8 text-center text-slate-500">
+                Loading reviews...
+              </div>
+            ) : (
+              <ReviewList reviews={reviews} />
+            )}
+
+            <ReviewForm
+              onSubmitReview={handleSubmitReview}
+              loading={reviewLoading}
+            />
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
