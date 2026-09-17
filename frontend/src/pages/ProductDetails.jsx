@@ -26,7 +26,7 @@ import {
 import { addItemToCart } from "../redux/slices/cartSlice";
 import ReviewForm from "../components/review/ReviewForm";
 import ReviewList from "../components/review/ReviewList";
-import RatingSummary from "../components/review/Ratingsummary";
+import RatingSummary from "../components/review/RatingSummary";
 
 const getHighResImage = (url) => {
   if (!url) return "/placeholder.png";
@@ -555,7 +555,7 @@ const ProductDetails = () => {
                 Loading reviews...
               </div>
             ) : (
-              <ReviewList reviews={reviews} />
+              <ReviewList productId={product._id} reviews={reviews} />
             )}
 
             <ReviewForm
