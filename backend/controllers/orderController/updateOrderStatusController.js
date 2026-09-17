@@ -1,7 +1,7 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import ErrorHandler from "../../utils/errorHandler.js";
 import Order from "../../models/orderModel.js";
-
+import Product from "../../models/productModel.js";
 import User from "../../models/userModel.js";
 import { sendEmail } from "../../utils/sendEmail.js";
 import { orderStatusEmailTemplate } from "../../utils/emailTemplates.js";
@@ -25,8 +25,8 @@ const VALID_STATUS_TRANSITIONS = {
 
 // ==========================================
 // UPDATE ORDER STATUS
-// PUT /api/v1/seller/order/:id
-// PUT /api/v1/admin/order/:id
+// PUT /api/v1/seller/orders/:id
+// PUT /api/v1/admin/orders/:id
 // ==========================================
 
 export const updateOrderStatus = asyncHandler(async (req, res, next) => {
@@ -62,7 +62,8 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
   if (req.user.role === "seller") {
     const isSellerProductOwner = order.orderItems.some(
       (item) =>
-        item.seller && item.seller.toString() === req.user._id.toString(),
+        item.seller &&
+        item.seller.toString() === req.user._id.toString(),
     );
 
     if (!isSellerProductOwner) {
@@ -81,13 +82,19 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
 
   if (order.orderStatus === "Delivered") {
     return next(
-      new ErrorHandler("This order has already been marked as Delivered", 400),
+      new ErrorHandler(
+        "This order has already been marked as Delivered",
+        400,
+      ),
     );
   }
 
   if (order.orderStatus === "Cancelled") {
     return next(
-      new ErrorHandler("Cannot change status of a Cancelled order", 400),
+      new ErrorHandler(
+        "Cannot change status of a Cancelled order",
+        400,
+      ),
     );
   }
 
@@ -95,7 +102,8 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
   // 5. VALIDATE STATUS TRANSITION
   // ==========================================
 
-  const allowedNextStatuses = VALID_STATUS_TRANSITIONS[order.orderStatus] || [];
+  const allowedNextStatuses =
+    VALID_STATUS_TRANSITIONS[order.orderStatus] || [];
 
   if (!allowedNextStatuses.includes(status)) {
     return next(
@@ -126,11 +134,10 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
 
   order.statusHistory.push({
     status,
-
-    comment: comment || `Order status updated to ${status} by ${req.user.role}`,
-
+    comment:
+      comment ||
+      `Order status updated to ${status} by ${req.user.role}`,
     updatedAt: new Date(),
-
     updatedBy: req.user._id,
   });
 
@@ -151,7 +158,43 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
   });
 
   // ==========================================
-  // 11. SEND EMAIL TO CUSTOMER
+  // 11. VERIFY PRODUCT REVIEWS AFTER DELIVERY
+  // ==========================================
+
+  if (status === "Delivered") {
+    for (const item of order.orderItems) {
+      const product = await Product.findById(item.product);
+
+      // Product delete ho chuka ho to next item
+      if (!product) {
+        continue;
+      }
+
+      let reviewUpdated = false;
+
+      // Find customer's review for this product
+      product.reviews.forEach((review) => {
+        if (
+          review.user &&
+          review.user.toString() === order.user.toString() &&
+          review.isVerifiedPurchase !== true
+        ) {
+          review.isVerifiedPurchase = true;
+          reviewUpdated = true;
+        }
+      });
+
+      // Save only if review was actually updated
+      if (reviewUpdated) {
+        await product.save({
+          validateBeforeSave: false,
+        });
+      }
+    }
+  }
+
+  // ==========================================
+  // 12. SEND EMAIL TO CUSTOMER
   // ==========================================
 
   try {
@@ -160,33 +203,39 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
     if (user) {
       await sendEmail({
         email: user.email,
-
         subject: `Order Status Updated - ${status}`,
-
-        html: orderStatusEmailTemplate(user.name, order, status, comment),
-
+        html: orderStatusEmailTemplate(
+          user.name,
+          order,
+          status,
+          comment,
+        ),
         message: `Your order ${order._id} status has been updated to ${status}.`,
       });
 
-      console.log(`📧 Order status email sent successfully to: ${user.email}`);
+      console.log(
+        `📧 Order status email sent successfully to: ${user.email}`,
+      );
     } else {
-      console.log(`⚠️ Customer not found for order: ${order._id}`);
+      console.log(
+        `⚠️ Customer not found for order: ${order._id}`,
+      );
     }
   } catch (emailError) {
     // Email failure should NOT rollback order status
-
-    console.error("❌ Order Status Email Failed:", emailError.message);
+    console.error(
+      "❌ Order Status Email Failed:",
+      emailError.message,
+    );
   }
 
   // ==========================================
-  // 12. RESPONSE
+  // 13. RESPONSE
   // ==========================================
 
   res.status(200).json({
     success: true,
-
     message: `Order status updated to ${status}`,
-
     order,
   });
 });

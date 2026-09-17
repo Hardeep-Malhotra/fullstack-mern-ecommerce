@@ -60,14 +60,21 @@ import { isAuthenticatedUser } from "../middlewares/auth.js";
 // Validators
 import { createReviewSchema } from "../validators/productValidator.js";
 
+// ==========================================
 // Product Controllers
+// ==========================================
+
 import { getAllProducts } from "../controllers/productController/getAllProductsController.js";
 import { getSingleProduct } from "../controllers/productController/getSingleProductController.js";
 
+// ==========================================
 // Review Controllers
-import { getProductReviews } from "../controllers/productController/getReviewsController.js";
-import { createProductReview } from "../controllers/productController/createReviewController.js";
-import { deleteProductReview } from "../controllers/productController/deleteReviewController.js";
+// ==========================================
+
+import { getProductReviews } from "../controllers/reviewController/getReviewsController.js";
+import { createProductReview } from "../controllers/reviewController/createReviewController.js";
+import { deleteProductReview } from "../controllers/reviewController/deleteReviewController.js";
+import { voteOnReview } from "../controllers/reviewController/Votereviewcontroller.js";
 
 const router = express.Router();
 
@@ -78,6 +85,7 @@ const router = express.Router();
 // Public
 router.get("/products", getAllProducts);
 
+
 // =====================================================
 // 2. SINGLE PRODUCT
 // =====================================================
@@ -85,12 +93,17 @@ router.get("/products", getAllProducts);
 // Public
 router.get("/products/:id", getSingleProduct);
 
+
 // =====================================================
 // 3. GET PRODUCT REVIEWS
 // =====================================================
 
 // Public
-router.get("/products/:id/reviews", getProductReviews);
+router.get(
+  "/products/:id/reviews",
+  getProductReviews
+);
+
 
 // =====================================================
 // 4. CREATE / UPDATE PRODUCT REVIEW
@@ -101,14 +114,32 @@ router.put(
   "/products/:id/review",
   isAuthenticatedUser,
   validateBody(createReviewSchema),
-  createProductReview,
+  createProductReview
 );
+
 
 // =====================================================
 // 5. DELETE PRODUCT REVIEW
 // =====================================================
 
 // Private
-router.delete("/products/:id/review", isAuthenticatedUser, deleteProductReview);
+router.delete(
+  "/products/:id/review",
+  isAuthenticatedUser,
+  deleteProductReview
+);
+
+
+// =====================================================
+// 6. HELPFUL / UNHELPFUL REVIEW VOTE
+// =====================================================
+
+// Private
+router.put(
+  "/products/:id/review/vote",
+  isAuthenticatedUser,
+  voteOnReview
+);
+
 
 export default router;
