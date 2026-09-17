@@ -34,14 +34,13 @@ export const createProductSchema = Joi.object({
 });
 export const createReviewSchema = Joi.object({
   rating: Joi.number().min(1).max(5).required().messages({
+    "number.base": "Rating must be a number",
     "number.min": "Rating must be at least 1",
     "number.max": "Rating cannot exceed 5",
     "any.required": "Rating is required",
   }),
   comment: Joi.string().trim().required().messages({
+    "string.empty": "Comment cannot be empty",
     "any.required": "Comment is required",
-  }),
-  productId: Joi.string().required().messages({
-    "any.required": "Product ID is required",
   }),
 });

@@ -5,7 +5,7 @@ import Product from "../../models/productModel.js";
 // @desc    Delete Product Review
 // @route   DELETE /api/v1/products/reviews?productId=PRODUCT_ID&id=USER_ID
 // @access  Private (Logged-in User / Admin)
-export const deleteReview = asyncHandler(async (req, res, next) => {
+export const deleteProductReview = asyncHandler(async (req, res, next) => {
   const { productId, id } = req.query; // 'id' yahan review dene wale user ki ID hai
 
   if (!productId || !id) {
