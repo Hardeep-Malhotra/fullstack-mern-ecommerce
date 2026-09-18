@@ -2,7 +2,7 @@
 
 # 🛒 Shopzy — AI-Powered Multi-Vendor E-Commerce Platform
 
-### A production-grade MERN marketplace with secure payments, multi-vendor order routing, role-based dashboards, and a conversational AI shopping assistant.
+### A production-grade MERN marketplace with secure payments, multi-vendor order routing, role-based dashboard's, and a conversational AI shopping assistant.
 
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
