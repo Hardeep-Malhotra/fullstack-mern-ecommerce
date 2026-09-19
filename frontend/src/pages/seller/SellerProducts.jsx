@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -7,6 +8,7 @@ import {
   Search,
   Edit2,
   Trash2,
+  Eye,
   RefreshCw,
   X,
   XCircle,
@@ -50,6 +52,8 @@ const cardVariants = {
 };
 
 const SellerProducts = () => {
+  const navigate = useNavigate();
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -170,6 +174,14 @@ const SellerProducts = () => {
       setRefreshing(false);
       setLoading(false);
     }
+  };
+
+  // ==========================================================
+  // VIEW PRODUCT (reuses the public product details page)
+  // ==========================================================
+
+  const handleViewProduct = (product) => {
+    navigate(`/seller/products/${product._id}`);
   };
 
   // ==========================================================
@@ -675,6 +687,13 @@ const SellerProducts = () => {
 
                     <div className="absolute top-2.5 right-2.5 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <button
+                        onClick={() => handleViewProduct(p)}
+                        className="p-1.5 rounded-lg bg-white/95 text-slate-600 hover:bg-slate-700 hover:text-white shadow-sm transition-colors"
+                        title="View"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
                         onClick={() => openEditModal(p)}
                         className="p-1.5 rounded-lg bg-white/95 text-orange-600 hover:bg-orange-500 hover:text-white shadow-sm transition-colors"
                         title="Edit"
@@ -790,6 +809,13 @@ const SellerProducts = () => {
 
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2">
+                          <button
+                            className="p-1.5 rounded-md bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors duration-200"
+                            onClick={() => handleViewProduct(p)}
+                            title="View"
+                          >
+                            <Eye size={16} />
+                          </button>
                           <button
                             className="p-1.5 rounded-md bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors duration-200"
                             onClick={() => openEditModal(p)}

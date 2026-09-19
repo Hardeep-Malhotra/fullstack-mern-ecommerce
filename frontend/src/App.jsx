@@ -59,6 +59,7 @@ import SellerDashboard from "./pages/seller/sellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
 import SellerOrders from "./pages/seller/SellerOrders";
 import SellerOrderDetails from "./pages/seller/SellerOrderDetails";
+import SellerProductDetails from "./pages/seller/SellerProductDetails";
 
 // Route Guard
 import ProtectedRoute from "./components/route/ProtectedRoute";
@@ -278,6 +279,10 @@ function AppContent() {
               <Route path="/seller/dashboard" element={<SellerDashboard />} />
 
               <Route path="/seller/products" element={<SellerProducts />} />
+              <Route
+                path="/seller/products/:id"
+                element={<SellerProductDetails />}
+              />
 
               <Route path="/seller/orders" element={<SellerOrders />} />
 
