@@ -1,15 +1,20 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import ErrorHandler from "../../utils/errorHandler.js";
 import Product from "../../models/productModel.js";
+import { deleteCache } from "../../utils/redisCache.js";
 
 // @desc    Delete Product Review
 // @route   DELETE /api/v1/products/:id/review
 // @access  Private
+
 export const deleteProductReview = asyncHandler(
   async (req, res, next) => {
     const { id: productId } = req.params;
 
-    // 1. Find product
+    // =====================================
+    // 1. Find Product
+    // =====================================
+
     const product = await Product.findById(productId);
 
     if (!product) {
@@ -50,8 +55,8 @@ export const deleteProductReview = asyncHandler(
     // =====================================
 
     else if (req.user.role === "seller") {
-      // Seller can delete only reviews
-      // from their own products
+      // Seller can delete reviews
+      // only from their own products
 
       if (
         product.seller.toString() !== currentUserId
@@ -64,8 +69,11 @@ export const deleteProductReview = asyncHandler(
         );
       }
 
-      // Reviewer ID supplied by seller
-      const { userId } = req.query;
+      // IMPORTANT:
+      // Frontend sends reviewer ID as:
+      // /reviews/:userId
+
+      const { userId } = req.params;
 
       if (!userId) {
         return next(
@@ -110,25 +118,27 @@ export const deleteProductReview = asyncHandler(
     }
 
     // =====================================
-    // 2. Recalculate review count
+    // 2. Recalculate Review Count
     // =====================================
 
     product.numberOfReviews =
       product.reviews.length;
 
     // =====================================
-    // 3. Recalculate average rating
+    // 3. Recalculate Average Rating
     // =====================================
 
-    product.ratings = product.reviews.length
-      ? product.reviews.reduce(
-          (sum, review) => sum + review.rating,
-          0
-        ) / product.reviews.length
-      : 0;
+    product.ratings =
+      product.reviews.length > 0
+        ? product.reviews.reduce(
+            (sum, review) =>
+              sum + Number(review.rating || 0),
+            0
+          ) / product.reviews.length
+        : 0;
 
     // =====================================
-    // 4. Save product
+    // 4. Save Product
     // =====================================
 
     await product.save({
@@ -136,7 +146,15 @@ export const deleteProductReview = asyncHandler(
     });
 
     // =====================================
-    // 5. Response
+    // 5. Clear AI Review Summary Cache
+    // =====================================
+
+    await deleteCache(
+      `review_summary:${productId}`
+    );
+
+    // =====================================
+    // 6. Response
     // =====================================
 
     return res.status(200).json({
@@ -146,4 +164,4 @@ export const deleteProductReview = asyncHandler(
       numberOfReviews: product.numberOfReviews,
     });
   }
-);
+);  

@@ -1,4 +1,3 @@
-
 import express from "express";
 
 // =====================================================
@@ -43,6 +42,12 @@ import { updateOrderStatus } from "../controllers/orderController/updateOrderSta
 // =====================================================
 import { getSellerDashboardStats } from "../controllers/orderController/getSellerDashboardStats.js";
 
+// =====================================================
+// REVIEW CONTROLLERS
+// =====================================================
+
+import { deleteProductReview } from "../controllers/reviewController/deleteReviewController.js";
+
 const router = express.Router();
 
 // =====================================================
@@ -66,12 +71,7 @@ const handleImageUpload = (req, res, next) => {
     if (err) {
       console.error("MULTER ERROR:", err);
 
-      return next(
-        new ErrorHandler(
-          err.message || "File upload failed",
-          400
-        )
-      );
+      return next(new ErrorHandler(err.message || "File upload failed", 400));
     }
 
     next();
@@ -87,7 +87,7 @@ router.get(
   isAuthenticatedUser,
   authorizeRoles("seller"),
   isApprovedSeller,
-  getSellerDashboardStats
+  getSellerDashboardStats,
 );
 
 // =====================================================
@@ -103,7 +103,7 @@ router
     isAuthenticatedUser,
     authorizeRoles("seller"),
     isApprovedSeller,
-    getAdminProducts
+    getAdminProducts,
   )
 
   // Create Seller Product
@@ -113,7 +113,7 @@ router
     isApprovedSeller,
     handleImageUpload,
     validateBody(createProductSchema),
-    createProducts
+    createProducts,
   );
 
 // =====================================================
@@ -131,7 +131,7 @@ router
     isApprovedSeller,
     handleImageUpload,
     validateBody(updateProductSchema),
-    updateProduct
+    updateProduct,
   )
 
   // Delete Product
@@ -139,7 +139,7 @@ router
     isAuthenticatedUser,
     authorizeRoles("seller"),
     isApprovedSeller,
-    deleteProduct
+    deleteProduct,
   );
 
 // =====================================================
@@ -154,7 +154,7 @@ router.get(
   isAuthenticatedUser,
   authorizeRoles("seller"),
   isApprovedSeller,
-  getAllOrders
+  getAllOrders,
 );
 
 // =====================================================
@@ -169,7 +169,7 @@ router.get(
   isAuthenticatedUser,
   authorizeRoles("seller"),
   isApprovedSeller,
-  getSellerOrderDetails
+  getSellerOrderDetails,
 );
 
 // =====================================================
@@ -181,7 +181,20 @@ router.put(
   isAuthenticatedUser,
   authorizeRoles("seller"),
   isApprovedSeller,
-  updateOrderStatus
+  updateOrderStatus,
+);
+
+// =====================================================
+// SELLER DELETE PRODUCT REVIEW
+// DELETE /api/v1/seller/products/:id/reviews/:userId
+// =====================================================
+
+router.delete(
+  "/products/:id/reviews/:userId",
+  isAuthenticatedUser,
+  authorizeRoles("seller"),
+  isApprovedSeller,
+  deleteProductReview,
 );
 
 // =====================================================

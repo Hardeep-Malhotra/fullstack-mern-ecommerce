@@ -75,7 +75,7 @@ import { getProductReviews } from "../controllers/reviewController/getReviewsCon
 import { createProductReview } from "../controllers/reviewController/createReviewController.js";
 import { deleteProductReview } from "../controllers/reviewController/deleteReviewController.js";
 import { voteOnReview } from "../controllers/reviewController/Votereviewcontroller.js";
-
+import { getProductReviewSummary } from "../controllers/reviewController/getProductReviewSummary.js";
 const router = express.Router();
 
 // =====================================================
@@ -106,7 +106,17 @@ router.get(
 
 
 // =====================================================
-// 4. CREATE / UPDATE PRODUCT REVIEW
+// 4. AI REVIEW SUMMARY
+// =====================================================
+
+// Public
+router.get(
+  "/products/:id/review-summary",
+  getProductReviewSummary
+);
+
+// =====================================================
+// 5. CREATE / UPDATE PRODUCT REVIEW
 // =====================================================
 
 // Private
@@ -119,7 +129,7 @@ router.put(
 
 
 // =====================================================
-// 5. DELETE PRODUCT REVIEW
+// 6. DELETE PRODUCT REVIEW
 // =====================================================
 
 // Private
@@ -131,7 +141,7 @@ router.delete(
 
 
 // =====================================================
-// 6. HELPFUL / UNHELPFUL REVIEW VOTE
+// 7. HELPFUL / UNHELPFUL REVIEW VOTE
 // =====================================================
 
 // Private

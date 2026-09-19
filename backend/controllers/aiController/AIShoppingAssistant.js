@@ -51,7 +51,7 @@ export const chatWithAI = async (req, res) => {
 
     const aiResponse = await axios.post(
 
-      "http://127.0.0.1:9000/ai/chat",
+      `${process.env.AI_SERVICE_URL}/ai/chat`,
 
       {
 
