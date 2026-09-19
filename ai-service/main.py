@@ -1,12 +1,12 @@
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+from typing import List, Dict, Any
 from config.db import products_collection
 from services.ai_service import ask_ai
 from services.embedding_service import generate_embedding
 from services.semantic_search import semantic_search_products
-
+from services.review_summary_service import generate_review_summary
 
 app = FastAPI(title="NexusCart AI Service")
 
@@ -20,6 +20,8 @@ class ChatRequest(BaseModel):
     session_id: str = "default_session"
 
 
+class ReviewSummaryRequest(BaseModel):
+    reviews: List[Dict[str, Any]]
 # ==============================
 # HOME
 # ==============================
@@ -90,4 +92,22 @@ def semantic_search(query: str):
         "success": True,
         "query": query,
         "results": results
+    }
+
+# ==============================
+# REVIEW SUMMARY 
+# ==============================
+
+@app.post("/ai/review-summary")
+async def review_summary_endpoint(
+    request: ReviewSummaryRequest
+):
+
+    result = generate_review_summary(
+        request.reviews
+    )
+
+    return {
+        "success": True,
+        "summary": result
     }
