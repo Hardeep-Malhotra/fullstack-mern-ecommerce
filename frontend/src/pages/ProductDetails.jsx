@@ -1,3 +1,5 @@
+
+
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -26,7 +28,8 @@ import {
 import { addItemToCart } from "../redux/slices/cartSlice";
 import ReviewForm from "../components/review/ReviewForm";
 import ReviewList from "../components/review/ReviewList";
-import RatingSummary from "../components/review/RatingSummary";
+import RatingSummary from "../components/review/Ratingsummary";
+import AIReviewSummary from "../components/review/AIReviewSummary";
 
 const getHighResImage = (url) => {
   if (!url) return "/placeholder.png";
@@ -548,8 +551,9 @@ const ProductDetails = () => {
             <RatingSummary reviews={reviews} />
           </div>
 
-          {/* RIGHT: Search/sort/list + write-a-review */}
+          {/* RIGHT: AI summary + Search/sort/list + write-a-review */}
           <div className="lg:col-span-8 space-y-6">
+            <AIReviewSummary productId={product._id} reviewCount={reviews.length} />
             {reviewsLoading ? (
               <div className="py-8 text-center text-slate-500">
                 Loading reviews...
