@@ -22,7 +22,7 @@ const categories = [
   { name: "Electronics", image: "/Electronic_category.png" },
   { name: "Fashion", image: "/Fashion_category.png" },
   { name: "Footwear", image: "/Footeware_category.png" },
-  { name: "Beauty", image: "/Beauty_actegory.png" },
+  { name: "Beauty", image: "/Beauty_category.png" },
   { name: "Gaming", image: "/Gamming_category.png" },
   { name: "Home", image: "/Home_category.png" },
   { name: "Accessories", image: "/Accessories_category.png" },
