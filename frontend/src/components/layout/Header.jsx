@@ -1,67 +1,162 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import {
+  Link,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+
+import {
+  useSelector,
+  useDispatch,
+} from "react-redux";
+
 import { logoutUser } from "../../redux/slices/authSlice";
+
+import {
+  getWishlist,
+} from "../../redux/slices/wishlistSlice";
+
 import toast from "react-hot-toast";
 
 // ==========================================
 // CATEGORIES
 // ==========================================
+
 const categories = [
-  { name: "Electronics", desc: "Mobiles, Laptops, Gadgets", icon: "💻" },
-  { name: "Fashion", desc: "Clothing & Apparel", icon: "👕" },
-  { name: "Footwear", desc: "Sneakers, Sports, Casual", icon: "👟" },
-  { name: "Accessories", desc: "Watches, Bags, Wallets", icon: "👜" },
-  { name: "Beauty", desc: "Makeup, Skincare, Perfume", icon: "💄" },
-  { name: "Gaming", desc: "Gaming Gear & Accessories", icon: "🎮" },
-  { name: "Home", desc: "Home & Living Products", icon: "🏠" },
+  {
+    name: "Electronics",
+    desc: "Mobiles, Laptops, Gadgets",
+    icon: "💻",
+  },
+  {
+    name: "Fashion",
+    desc: "Clothing & Apparel",
+    icon: "👕",
+  },
+  {
+    name: "Footwear",
+    desc: "Sneakers, Sports, Casual",
+    icon: "👟",
+  },
+  {
+    name: "Accessories",
+    desc: "Watches, Bags, Wallets",
+    icon: "👜",
+  },
+  {
+    name: "Beauty",
+    desc: "Makeup, Skincare, Perfume",
+    icon: "💄",
+  },
+  {
+    name: "Gaming",
+    desc: "Gaming Gear & Accessories",
+    icon: "🎮",
+  },
+  {
+    name: "Home",
+    desc: "Home & Living Products",
+    icon: "🏠",
+  },
 ];
 
 // ==========================================
 // NAVIGATION LINKS
 // ==========================================
+
 const navLinks = [
-  { label: "Home", path: "/" },
-  { label: "Shop", path: "/products" },
-  { label: "Deals", path: "/products?sort=-price", hot: true },
-  { label: "About", path: "/about" },
-  { label: "Contact", path: "/contact" },
+  {
+    label: "Home",
+    path: "/",
+  },
+  {
+    label: "Shop",
+    path: "/products",
+  },
+  {
+    label: "Deals",
+    path: "/products?sort=-price",
+    hot: true,
+  },
+  {
+    label: "About",
+    path: "/about",
+  },
+  {
+    label: "Contact",
+    path: "/contact",
+  },
 ];
 
 // ==========================================
 // HEADER
 // ==========================================
+
 const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] =
+    useState(false);
+  const [isProfileOpen, setIsProfileOpen] =
+    useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] =
+    useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // ==========================================
   // AUTH STATE
   // ==========================================
-  const { isAuthenticated, user } = useSelector((state) => state.auth || {});
+
+  const {
+    isAuthenticated,
+    user,
+  } = useSelector(
+    (state) => state.auth || {}
+  );
 
   // ==========================================
-  // CART / WISHLIST
+  // CART COUNT
   // ==========================================
+
   const cartCount = useSelector(
     (state) =>
       state.cart?.cartItems?.reduce(
-        (total, item) => total + item.quantity,
-        0,
-      ) || 0,
+        (total, item) =>
+          total + (item.quantity || 1),
+        0
+      ) || 0
   );
-  const wishlistCount = 0;
+
+  // ==========================================
+  // WISHLIST COUNT
+  // ==========================================
+
+  const wishlistCount = useSelector(
+    (state) =>
+      isAuthenticated
+        ? state.wishlist?.items?.length || 0
+        : 0
+  );
+
+  // ==========================================
+  // LOAD WISHLIST
+  // ==========================================
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(getWishlist());
+    }
+  }, [dispatch, isAuthenticated]);
 
   // ==========================================
   // SEARCH
   // ==========================================
+
   const handleSearch = (e) => {
     e.preventDefault();
+
     const keyword = searchTerm.trim();
 
     if (!keyword) {
@@ -71,48 +166,93 @@ const Header = () => {
     }
 
     const params = new URLSearchParams();
+
     params.set("keyword", keyword);
 
-    navigate(`/products?${params.toString()}`);
+    navigate(
+      `/products?${params.toString()}`
+    );
+
     setIsMobileMenuOpen(false);
   };
 
   // ==========================================
   // CATEGORY SELECT
   // ==========================================
+
   const handleCategorySelect = (category) => {
     setIsCategoryOpen(false);
-    setIsMobileMenuOpen(false); // Bug fix: Mobile menu auto-closes on selection
+    setIsMobileMenuOpen(false);
 
-    navigate(`/products?category=${encodeURIComponent(category)}`);
+    navigate(
+      `/products?category=${encodeURIComponent(
+        category
+      )}`
+    );
   };
 
   // ==========================================
   // LOGOUT
   // ==========================================
+
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
+
       setIsProfileOpen(false);
-      toast.success("Logged Out Successfully");
+
+      toast.success(
+        "Logged Out Successfully"
+      );
+
       navigate("/login");
     } catch (error) {
-      toast.error(error || "Logout failed");
+      toast.error(
+        error || "Logout failed"
+      );
     }
   };
 
-  if (location.pathname.startsWith("/admin")) {
+  // ==========================================
+  // HIDE HEADER ON ADMIN
+  // ==========================================
+
+  if (
+    location.pathname.startsWith("/admin")
+  ) {
     return null;
   }
+
+  // ==========================================
+  // UI
+  // ==========================================
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* =====================================
+            MAIN HEADER
+        ===================================== */}
+
         <div className="h-[78px] flex items-center justify-between gap-4">
-          {/* LEFT GROUP */}
+
+          {/* ====================================
+              LEFT GROUP
+          ==================================== */}
+
           <div className="flex items-center gap-3 min-w-0">
-            {/* Mobile Menu Toggle */}
+
+            {/* MOBILE MENU */}
+
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              type="button"
+              onClick={() =>
+                setIsMobileMenuOpen(
+                  !isMobileMenuOpen
+                )
+              }
               className="lg:hidden w-9 h-9 flex items-center justify-center text-slate-700 hover:text-orange-500 text-xl shrink-0"
               aria-label="Open menu"
             >
@@ -120,25 +260,49 @@ const Header = () => {
             </button>
 
             {/* LOGO */}
-            <Link to="/" className="flex items-center gap-2 shrink-0">
-              <span className="text-2xl">🛍️</span>
+
+            <Link
+              to="/"
+              className="flex items-center gap-2 shrink-0"
+            >
+              <span className="text-2xl">
+                🛍️
+              </span>
+
               <h1 className="text-xl font-extrabold text-slate-900">
-                Shopzy<span className="text-orange-500">.</span>
+                Shopzy
+                <span className="text-orange-500">
+                  .
+                </span>
               </h1>
             </Link>
 
-            {/* CATEGORY DROPDOWN */}
+            {/* ==================================
+                CATEGORY DROPDOWN
+            ================================== */}
+
             <div className="relative hidden lg:block shrink-0">
+
               <button
                 type="button"
-                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                onClick={() =>
+                  setIsCategoryOpen(
+                    !isCategoryOpen
+                  )
+                }
                 className="h-11 px-4 flex items-center gap-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-orange-300 hover:text-orange-500 transition"
               >
                 <span>▤</span>
-                <span>Categories</span>
+
+                <span>
+                  Categories
+                </span>
+
                 <span
                   className={`transition-transform ${
-                    isCategoryOpen ? "rotate-180" : ""
+                    isCategoryOpen
+                      ? "rotate-180"
+                      : ""
                   }`}
                 >
                   ▾
@@ -146,41 +310,65 @@ const Header = () => {
               </button>
 
               {/* CATEGORY MENU */}
+
               {isCategoryOpen && (
                 <div className="absolute left-0 top-14 w-[560px] bg-white border border-slate-200 rounded-xl shadow-xl p-4 grid grid-cols-4 gap-3">
-                  {categories.map((category) => (
-                    <button
-                      key={category.name}
-                      type="button"
-                      onClick={() => handleCategorySelect(category.name)}
-                      className="flex flex-col items-center text-center gap-1 p-3 rounded-lg hover:bg-orange-50 transition"
-                    >
-                      <span className="text-2xl">{category.icon}</span>
-                      <p className="text-sm font-semibold text-slate-800">
-                        {category.name}
-                      </p>
-                      <p className="text-[10px] text-slate-400">
-                        {category.desc}
-                      </p>
-                    </button>
-                  ))}
+
+                  {categories.map(
+                    (category) => (
+                      <button
+                        key={
+                          category.name
+                        }
+                        type="button"
+                        onClick={() =>
+                          handleCategorySelect(
+                            category.name
+                          )
+                        }
+                        className="flex flex-col items-center text-center gap-1 p-3 rounded-lg hover:bg-orange-50 transition"
+                      >
+                        <span className="text-2xl">
+                          {category.icon}
+                        </span>
+
+                        <p className="text-sm font-semibold text-slate-800">
+                          {category.name}
+                        </p>
+
+                        <p className="text-[10px] text-slate-400">
+                          {category.desc}
+                        </p>
+                      </button>
+                    )
+                  )}
+
                 </div>
               )}
             </div>
 
-            {/* DESKTOP SEARCH */}
+            {/* ==================================
+                DESKTOP SEARCH
+            ================================== */}
+
             <form
               onSubmit={handleSearch}
               className="hidden md:block w-[300px] lg:w-[320px] shrink-0"
             >
               <div className="w-full h-11 flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100 transition">
+
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) =>
+                    setSearchTerm(
+                      e.target.value
+                    )
+                  }
                   placeholder="Search for products..."
                   className="flex-1 min-w-0 px-4 text-sm text-slate-700 outline-none"
                 />
+
                 <button
                   type="submit"
                   className="w-11 h-10 flex items-center justify-center text-slate-500 hover:text-orange-500 transition"
@@ -188,12 +376,18 @@ const Header = () => {
                 >
                   🔍
                 </button>
+
               </div>
             </form>
+
           </div>
 
-          {/* CENTER NAV */}
+          {/* ====================================
+              CENTER NAV
+          ==================================== */}
+
           <nav className="hidden xl:flex items-center gap-7 shrink-0">
+
             {navLinks.map((link) => (
               <Link
                 key={link.label}
@@ -201,6 +395,7 @@ const Header = () => {
                 className="text-sm font-medium text-slate-700 hover:text-orange-500 flex items-center gap-1.5 whitespace-nowrap transition"
               >
                 {link.label}
+
                 {link.hot && (
                   <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500 text-white font-bold">
                     HOT
@@ -208,187 +403,389 @@ const Header = () => {
                 )}
               </Link>
             ))}
+
           </nav>
 
-          {/* RIGHT GROUP */}
+          {/* ====================================
+              RIGHT GROUP
+          ==================================== */}
+
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Wishlist */}
+
+            {/* ==================================
+                WISHLIST
+            ================================== */}
+
             <Link
               to="/wishlist"
               className="relative w-10 h-10 flex items-center justify-center text-xl text-slate-700 hover:text-orange-500 transition"
               aria-label="Wishlist"
             >
-              ♡
+              <span
+                className={
+                  wishlistCount > 0
+                    ? "text-orange-500"
+                    : ""
+                }
+              >
+                ♡
+              </span>
+
+              {/* WISHLIST BADGE */}
+
               {wishlistCount > 0 && (
-                <span className="absolute top-0 right-0 min-w-[17px] h-[17px] rounded-full bg-orange-500 text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
                   {wishlistCount}
                 </span>
               )}
             </Link>
 
-            {/* Cart */}
+            {/* ==================================
+                CART
+            ================================== */}
+
             <Link
               to="/cart"
               className="relative w-10 h-10 flex items-center justify-center text-lg text-slate-700 hover:text-orange-500 transition"
               aria-label="Cart"
             >
               🛒
+
               {cartCount > 0 && (
-                <span className="absolute top-0 right-0 min-w-[17px] h-[17px] rounded-full bg-orange-500 text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            {/* AUTHENTICATED USER */}
+            {/* ==================================
+                AUTHENTICATED USER
+            ================================== */}
+
             {isAuthenticated ? (
+
               <div className="relative">
+
                 <button
                   type="button"
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  onClick={() =>
+                    setIsProfileOpen(
+                      !isProfileOpen
+                    )
+                  }
                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition"
                 >
+
                   <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold shrink-0">
-                    {user?.name?.charAt(0).toUpperCase() || "U"}
+                    {user?.name
+                      ?.charAt(0)
+                      .toUpperCase() ||
+                      "U"}
                   </div>
+
                   <span className="hidden lg:block text-sm font-semibold text-slate-700 whitespace-nowrap">
-                    {user?.name?.split(" ")[0] || "Account"}
+                    {user?.name
+                      ?.split(" ")[0] ||
+                      "Account"}
                   </span>
+
                   <span className="hidden lg:block text-xs text-slate-400">
                     ▾
                   </span>
+
                 </button>
 
                 {/* PROFILE DROPDOWN */}
+
                 {isProfileOpen && (
                   <div className="absolute right-0 top-12 w-56 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+
                     <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
+
                       <p className="font-bold text-slate-900 text-sm">
                         {user?.name}
                       </p>
+
                       <p className="text-xs text-slate-500 truncate">
                         {user?.email}
                       </p>
+
                     </div>
 
                     <div className="p-2">
+
+                      {/* PROFILE */}
+
                       <Link
                         to="/account"
-                        onClick={() => setIsProfileOpen(false)}
+                        onClick={() =>
+                          setIsProfileOpen(
+                            false
+                          )
+                        }
                         className="block px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-orange-50 transition"
                       >
                         My Profile
                       </Link>
+
+                      {/* ORDERS */}
+
                       <Link
                         to="/orders"
-                        onClick={() => setIsProfileOpen(false)}
+                        onClick={() =>
+                          setIsProfileOpen(
+                            false
+                          )
+                        }
                         className="block px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-orange-50 transition"
                       >
                         My Orders
                       </Link>
 
-                      {/* =================================================
-                              ADMIN / SELLER DASHBOARD
-                             ================================================= */}
+                      {/* WISHLIST */}
 
-                      {user?.role === "admin" && (
+                      <Link
+                        to="/wishlist"
+                        onClick={() =>
+                          setIsProfileOpen(
+                            false
+                          )
+                        }
+                        className="block px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-orange-50 transition"
+                      >
+                        Wishlist
+                        {wishlistCount > 0 && (
+                          <span className="ml-2 text-xs font-bold text-orange-500">
+                            ({wishlistCount})
+                          </span>
+                        )}
+                      </Link>
+
+                      {/* ADMIN */}
+
+                      {user?.role ===
+                        "admin" && (
                         <Link
                           to="/admin/dashboard"
-                          onClick={() => setIsProfileOpen(false)}
+                          onClick={() =>
+                            setIsProfileOpen(
+                              false
+                            )
+                          }
                           className="block px-3 py-2 rounded-lg text-sm font-semibold text-orange-500 hover:bg-orange-50 transition"
                         >
                           Admin Dashboard
                         </Link>
                       )}
 
-                      {user?.role === "seller" && user?.isApproved === true && (
-                        <Link
-                          to="/seller/dashboard"
-                          onClick={() => setIsProfileOpen(false)}
-                          className="block px-3 py-2 rounded-lg text-sm font-semibold text-orange-500 hover:bg-orange-50 transition"
-                        >
-                          Seller Dashboard
-                        </Link>
-                      )}
+                      {/* SELLER */}
+
+                      {user?.role ===
+                        "seller" &&
+                        user?.isApproved ===
+                          true && (
+                          <Link
+                            to="/seller/dashboard"
+                            onClick={() =>
+                              setIsProfileOpen(
+                                false
+                              )
+                            }
+                            className="block px-3 py-2 rounded-lg text-sm font-semibold text-orange-500 hover:bg-orange-50 transition"
+                          >
+                            Seller Dashboard
+                          </Link>
+                        )}
+
+                      {/* LOGOUT */}
+
                       <button
                         type="button"
-                        onClick={handleLogout}
+                        onClick={
+                          handleLogout
+                        }
                         className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition"
                       >
                         Logout
                       </button>
+
                     </div>
                   </div>
                 )}
+
               </div>
+
             ) : (
+
               <Link
                 to="/login"
                 className="px-3 sm:px-4 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-semibold whitespace-nowrap transition"
               >
                 Login / Sign Up
               </Link>
+
             )}
+
           </div>
+
         </div>
 
-        {/* MOBILE SEARCH */}
+        {/* ======================================
+            MOBILE SEARCH
+        ====================================== */}
+
         <div className="md:hidden pb-3">
+
           <form onSubmit={handleSearch}>
+
             <div className="h-11 flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:border-orange-400">
+
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) =>
+                  setSearchTerm(
+                    e.target.value
+                  )
+                }
                 placeholder="Search for products..."
                 className="flex-1 px-4 text-sm outline-none"
               />
+
               <button
                 type="submit"
                 className="w-11 h-10 bg-orange-500 text-white hover:bg-orange-600 transition"
               >
                 🔍
               </button>
+
             </div>
+
           </form>
+
         </div>
+
       </div>
 
-      {/* MOBILE MENU */}
+      {/* ========================================
+          MOBILE MENU
+      ======================================== */}
+
       {isMobileMenuOpen && (
+
         <div className="lg:hidden border-t border-slate-200 bg-white p-4 space-y-1">
+
           {navLinks.map((link) => (
+
             <Link
               key={link.label}
               to={link.path}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() =>
+                setIsMobileMenuOpen(
+                  false
+                )
+              }
               className="block px-4 py-3 rounded-lg text-slate-700 hover:bg-orange-50 hover:text-orange-500 transition"
             >
               {link.label}
-              {link.hot && <span className="ml-2 text-xs">🔥</span>}
+
+              {link.hot && (
+                <span className="ml-2 text-xs">
+                  🔥
+                </span>
+              )}
             </Link>
+
           ))}
 
+          {/* MOBILE WISHLIST */}
+
+          {isAuthenticated && (
+            <Link
+              to="/wishlist"
+              onClick={() =>
+                setIsMobileMenuOpen(
+                  false
+                )
+              }
+              className="flex items-center justify-between px-4 py-3 rounded-lg text-slate-700 hover:bg-orange-50 hover:text-orange-500 transition"
+            >
+              <span>
+                ❤️ Wishlist
+              </span>
+
+              {wishlistCount > 0 && (
+                <span className="min-w-[22px] h-[22px] px-1 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+          )}
+
+          {/* MOBILE CART */}
+
+          <Link
+            to="/cart"
+            onClick={() =>
+              setIsMobileMenuOpen(
+                false
+              )
+            }
+            className="flex items-center justify-between px-4 py-3 rounded-lg text-slate-700 hover:bg-orange-50 hover:text-orange-500 transition"
+          >
+            <span>
+              🛒 Cart
+            </span>
+
+            {cartCount > 0 && (
+              <span className="min-w-[22px] h-[22px] px-1 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </Link>
+
+          {/* CATEGORIES */}
+
           <div className="pt-3 border-t border-slate-100 mt-2">
+
             <p className="px-4 py-2 text-xs font-bold uppercase text-slate-400">
               Categories
             </p>
+
             <div className="grid grid-cols-2 gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category.name}
-                  type="button"
-                  onClick={() => handleCategorySelect(category.name)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-500 transition"
-                >
-                  <span>{category.icon}</span>
-                  {category.name}
-                </button>
-              ))}
+
+              {categories.map(
+                (category) => (
+
+                  <button
+                    key={
+                      category.name
+                    }
+                    type="button"
+                    onClick={() =>
+                      handleCategorySelect(
+                        category.name
+                      )
+                    }
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-500 transition"
+                  >
+                    <span>
+                      {category.icon}
+                    </span>
+
+                    {category.name}
+                  </button>
+
+                )
+              )}
+
             </div>
+
           </div>
+
         </div>
       )}
+
     </header>
   );
 };

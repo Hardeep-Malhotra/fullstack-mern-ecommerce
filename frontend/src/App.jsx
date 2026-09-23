@@ -43,6 +43,7 @@ import ConfirmOrder from "./pages/cart/ConfirmOrder";
 import Payment from "./pages/cart/Payment";
 import MyOrders from "./pages/order/MyOrders";
 import OrderDetails from "./pages/order/OrderDetails";
+import Wishlist from "./pages/Wishlist";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -219,6 +220,8 @@ function AppContent() {
 
           <Route path="/cart" element={<Cart />} />
 
+          
+
           {/* =================================
               AUTH ROUTES
           ================================= */}
@@ -243,6 +246,8 @@ function AppContent() {
             <Route path="/account" element={<Profile />} />
 
             <Route path="/shipping" element={<Shipping />} />
+
+            <Route path="/wishlist" element={<Wishlist />} />
 
             <Route path="/order/confirm" element={<ConfirmOrder />} />
 
