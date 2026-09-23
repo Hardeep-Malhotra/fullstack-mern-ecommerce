@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
@@ -67,10 +66,16 @@ const userSchema = new mongoose.Schema(
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // ==========================================

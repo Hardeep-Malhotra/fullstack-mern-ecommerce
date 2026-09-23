@@ -16,6 +16,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import sellerRoutes from "./routes/sellerRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
 
 import errorMiddleware from "./middlewares/error.js";
 
@@ -77,6 +78,8 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1", orderRoutes);
 
 app.use("/api/v1/payment", paymentRoutes);
+
+app.use("/api/v1/wishlist", wishlistRoutes);
 
 // 🤖 AI MICROSERVICE PROXY ROUTES
 app.use("/api/v1/ai", aiRoutes);
