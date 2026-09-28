@@ -25,30 +25,7 @@
 
     const navigate = useNavigate();
 
-    // =====================================================
-    // FETCH SELLER ORDERS
-    // =====================================================
-
-    // const fetchOrders = async () => {
-    //   try {
-    //     setRefreshing(true);
-    //     setError("");
-
-    //     // IMPORTANT:
-    //     // Seller route
-    //     const { data } = await axios.get("/seller/orders");
-
-    //     if (data.success) {
-    //       setOrders(data.orders || []);
-    //     }
-    //   } catch (err) {
-    //     console.error("Fetch seller orders error:", err);
-
-    //     setError(err.response?.data?.message || "Failed to fetch seller orders");
-    //   } finally {
-    //     setRefreshing(false);
-    //   }
-    // };
+   
 
     const fetchOrders = async () => {
   try {
