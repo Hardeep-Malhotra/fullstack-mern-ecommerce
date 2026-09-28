@@ -11,7 +11,7 @@ import {
 
 import { validateBody } from "../middlewares/validate.js";
 import upload from "../middlewares/upload.js";
-import ErrorHandler from "../utils/errorHandler.js";
+import ErrorHandler from "../utils/ErrorHandlers.js";
 
 // Rate Limiter
 import { apiLimiter } from "../middlewares/rateLimiter.js";
