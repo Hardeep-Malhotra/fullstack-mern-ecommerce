@@ -1,7 +1,7 @@
 
 
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/errorHandler.js";
+import ErrorHandler from "../../utils/ErrorHandler.js";
 import Order from "../../models/orderModel.js";
 
 // =====================================================

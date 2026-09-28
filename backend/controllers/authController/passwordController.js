@@ -2,7 +2,7 @@
 
 import crypto from "crypto";
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/errorHandler.js";
+import ErrorHandler from "../../utils/ErrorHandler.js";
 import User from "../../models/userModel.js";
 import { sendEmail } from "../../utils/sendEmail.js";
 import { sendToken } from "../../utils/sendToken.js";
