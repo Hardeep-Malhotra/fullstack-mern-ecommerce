@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/ErrorHandler.js";
+import ErrorHandler from "../../utils/ErrorHandlers.js";
 import User from "../../models/userModel.js";
 import { blacklistToken } from "../../utils/redisCache.js";
 

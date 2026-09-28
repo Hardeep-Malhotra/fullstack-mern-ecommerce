@@ -1,6 +1,6 @@
 import razorpay from "../../config/razorpay.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/errorHandler.js";
+import ErrorHandler from "../../utils/ErrorHandlers.js";
 import { createCircuitBreaker } from "../../utils/circuitBreaker.js";
 
 // 1. Core API Logic Function

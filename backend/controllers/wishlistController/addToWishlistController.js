@@ -1,7 +1,7 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import User from "../../models/userModel.js";
 import Product from "../../models/productModel.js";
-import ErrorHandler from "../../utils/ErrorHandler.js";
+import ErrorHandler from "../../utils/ErrorHandlers.js";
 export const addToWishlist = asyncHandler(async (req, res) => {
   const { productId } = req.params;
 

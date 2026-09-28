@@ -1,7 +1,7 @@
 import User from "../../models/userModel.js";
 import { sendToken } from "../../utils/sendToken.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/ErrorHandler.js"; // 1. Import your ErrorHandler
+import ErrorHandler from "../../utils/ErrorHandlers.js"; // 1. Import your ErrorHandler
 
 // ================
 

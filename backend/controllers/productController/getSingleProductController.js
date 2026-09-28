@@ -1,6 +1,6 @@
 import Product from "../../models/productModel.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/ErrorHandler.js";
+import ErrorHandler from "../../utils/ErrorHandlers.js";
 import { getCache, setCache } from "../../utils/redisCache.js";
 
 // @desc    Get single product details

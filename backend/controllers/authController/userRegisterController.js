@@ -8,7 +8,7 @@ import {
 } from "../../utils/emailTemplates.js";
 
 import asyncHandler from "../../middlewares/asyncHandler.js";
-import ErrorHandler from "../../utils/ErrorHandler.js";
+import ErrorHandler from "../../utils/ErrorHandlers.js";
 
 export const registerUser = asyncHandler(async (req, res, next) => {
   const { name, email, password, avatar, role } = req.body;

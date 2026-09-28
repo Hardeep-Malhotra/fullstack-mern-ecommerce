@@ -1,6 +1,6 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import User from "../../models/userModel.js";
-import ErrorHandler from "../../utils/ErrorHandler.js";
+import ErrorHandler from "../../utils/ErrorHandlers.js";
 export const getWishlist = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate({
     path: "wishlist",
