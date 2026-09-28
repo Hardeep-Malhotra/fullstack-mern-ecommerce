@@ -1,7 +1,7 @@
 
 import jwt from "jsonwebtoken";
 import asyncHandler from "./asyncHandler.js";
-import ErrorHandler from "../utils/ErrorHandler.js";
+import ErrorHandler from "../utils/ErrorHandlers.js";
 import User from "../models/userModel.js";
 import { isTokenBlacklisted } from "../utils/redisCache.js";
 // 1. Authenticate Logged In User
