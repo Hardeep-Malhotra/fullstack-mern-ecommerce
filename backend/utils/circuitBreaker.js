@@ -1,10 +1,10 @@
 import CircuitBreaker from "opossum";
-import ErrorHandler from "./errorHandler.js";
+import ErrorHandler from "./ErrorHandlers.js";
 
 const defaultOptions = {
-  timeout: 5000, // 5 सेकंड में रिस्पांस नहीं आया तो Request Fail मानी जाएगी
-  errorThresholdPercentage: 50, // 50% रिक्वेस्ट फेल होने पर सर्किट OPEN हो जाएगा
-  resetTimeout: 10000, // 10 सेकंड बाद HALF-OPEN होकर चेक करेगा
+  timeout: 5000, 
+  errorThresholdPercentage: 50, 
+  resetTimeout: 10000, 
 };
 
 export const createCircuitBreaker = (actionFunction, customOptions = {}) => {
