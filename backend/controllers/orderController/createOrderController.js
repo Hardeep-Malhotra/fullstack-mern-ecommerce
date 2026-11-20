@@ -14,7 +14,10 @@ import { deleteCache } from "../../utils/redisCache.js";
 
 import { sendEmail } from "../../utils/sendEmail.js";
 
+import { addEmailJob } from "../../jobs/emailQueue.js";
+
 import { orderPlacedEmailTemplate } from "../../utils/emailTemplates.js";
+
 
 // =====================================================
 // CREATE ORDER WITH MONGODB ACID TRANSACTION
@@ -243,11 +246,45 @@ export const createOrder = asyncHandler(async (req, res, next) => {
     // 📧 SEND ORDER CONFIRMATION EMAIL
     // =====================================================
 
+    // try {
+    //   const user = await User.findById(req.user._id);
+
+    //   if (user) {
+    //     await sendEmail({
+    //       email: user.email,
+
+    //       subject: `Order Confirmed - ${createdOrder._id}`,
+
+    //       html: orderPlacedEmailTemplate(user.name, createdOrder),
+
+    //       message: `Your order ${createdOrder._id} has been placed successfully.`,
+    //     });
+
+    //     console.log(`📧 Order confirmation email sent to ${user.email}`);
+    //   }
+    // } catch (emailError) {
+    //   // IMPORTANT:
+    //   // Email fail hone par order rollback nahi hoga,
+    //   // because order already successfully commit ho chuka hai.
+
+    //   console.error(
+    //     "❌ Order Email Sending Failed:",
+
+    //     emailError.message,
+    //   );
+    // }
+
+    // =====================================================
+    // 📧 QUEUE ORDER CONFIRMATION EMAIL
+    // POST-COMMIT EXECUTION
+    // =====================================================
+
     try {
       const user = await User.findById(req.user._id);
 
       if (user) {
-        await sendEmail({
+        // Prepare email payload
+        const emailData = {
           email: user.email,
 
           subject: `Order Confirmed - ${createdOrder._id}`,
@@ -255,20 +292,34 @@ export const createOrder = asyncHandler(async (req, res, next) => {
           html: orderPlacedEmailTemplate(user.name, createdOrder),
 
           message: `Your order ${createdOrder._id} has been placed successfully.`,
-        });
+        };
 
-        console.log(`📧 Order confirmation email sent to ${user.email}`);
+        try {
+          // Add email job to BullMQ
+          const job = await addEmailJob(emailData, {
+            jobId: `order-${createdOrder._id}`,
+          });
+
+          console.log(`📬 Order email job queued successfully: ${job.id}`);
+        } catch (queueError) {
+          // Fallback: preserve existing direct email behavior
+          console.error(
+            "⚠️ Email queue unavailable. Trying direct email:",
+            queueError.message,
+          );
+
+          try {
+            await sendEmail(emailData);
+
+            console.log(`📧 Fallback order email sent to ${user.email}`);
+          } catch (emailError) {
+            console.error("❌ Fallback email also failed:", emailError.message);
+          }
+        }
       }
     } catch (emailError) {
-      // IMPORTANT:
-      // Email fail hone par order rollback nahi hoga,
-      // because order already successfully commit ho chuka hai.
-
-      console.error(
-        "❌ Order Email Sending Failed:",
-
-        emailError.message,
-      );
+      // Email failure must never rollback a committed order
+      console.error("❌ Order email processing error:", emailError.message);
     }
 
     // =====================================================

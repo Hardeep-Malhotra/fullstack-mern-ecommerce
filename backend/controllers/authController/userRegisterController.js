@@ -1,6 +1,8 @@
+
 import User from "../../models/userModel.js";
 import { sendToken } from "../../utils/sendToken.js";
 import { sendEmail } from "../../utils/sendEmail.js";
+import { addEmailJob } from "../../jobs/emailQueue.js";
 
 import {
   welcomeEmailTemplate,
@@ -20,12 +22,13 @@ export const registerUser = asyncHandler(async (req, res, next) => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
-    return next(new ErrorHandler("User with this email already exists", 400));
+    return next(
+      new ErrorHandler("User with this email already exists", 400)
+    );
   }
 
   // ============================================
-  // SECURITY:
-  // USER PUBLIC REGISTER SE ADMIN NA BANE
+  // SECURITY: PUBLIC REGISTER SE ADMIN NA BANE
   // ============================================
 
   const userRole = role === "seller" ? "seller" : "user";
@@ -39,26 +42,20 @@ export const registerUser = asyncHandler(async (req, res, next) => {
     email,
     password,
     avatar,
-
     provider: "local",
-
     role: userRole,
   });
 
   // ============================================
-  // SELLER REGISTRATION
+  // SELLER REGISTRATION EMAIL
   // ============================================
 
   if (user.role === "seller") {
-    try {
-      await sendEmail({
-        email: user.email,
-
-        subject: "Your NexusCart AI Seller Registration is Pending ⏳",
-
-        html: sellerPendingEmailTemplate(user.name, user.email),
-
-        message: `
+    const emailData = {
+      email: user.email,
+      subject: "Your NexusCart AI Seller Registration is Pending ⏳",
+      html: sellerPendingEmailTemplate(user.name, user.email),
+      message: `
 Hello ${user.name},
 
 Your seller registration request has been submitted successfully.
@@ -69,10 +66,30 @@ You will receive another email once your seller account is approved.
 
 Thanks,
 NexusCart AI Team
-        `,
+      `,
+    };
+
+    try {
+      const job = await addEmailJob(emailData, {
+        jobId: `seller-registration-${user._id}`,
       });
-    } catch (emailError) {
-      console.error("Seller Registration Email Failed:", emailError.message);
+
+      console.log("📬 Seller registration email queued:", job.id);
+    } catch (queueError) {
+      console.error(
+        "⚠️ Seller email queue unavailable. Trying direct email:",
+        queueError.message
+      );
+
+      try {
+        await sendEmail(emailData);
+        console.log("📧 Seller registration fallback email sent");
+      } catch (emailError) {
+        console.error(
+          "❌ Seller registration email failed:",
+          emailError.message
+        );
+      }
     }
 
     // ============================================
@@ -81,7 +98,6 @@ NexusCart AI Team
 
     return res.status(201).json({
       success: true,
-
       message:
         "Seller registration submitted successfully! Please wait for admin approval.",
     });
@@ -91,18 +107,34 @@ NexusCart AI Team
   // NORMAL USER WELCOME EMAIL
   // ============================================
 
+  const emailData = {
+    email: user.email,
+    subject: "Welcome to NexusCart AI! 🚀",
+    html: welcomeEmailTemplate(user.name, user.email),
+    message: `Welcome to NexusCart AI, ${user.name}! Your account has been created successfully.`,
+  };
+
   try {
-    await sendEmail({
-      email: user.email,
-
-      subject: "Welcome to NexusCart AI! 🚀",
-
-      html: welcomeEmailTemplate(user.name, user.email),
-
-      message: `Welcome to NexusCart AI, ${user.name}! Your account has been created successfully.`,
+    const job = await addEmailJob(emailData, {
+      jobId: `welcome-${user._id}`,
     });
-  } catch (emailError) {
-    console.error("Welcome Email Sending Failed:", emailError.message);
+
+    console.log("📬 Welcome email queued:", job.id);
+  } catch (queueError) {
+    console.error(
+      "⚠️ Welcome email queue unavailable. Trying direct email:",
+      queueError.message
+    );
+
+    try {
+      await sendEmail(emailData);
+      console.log("📧 Welcome fallback email sent");
+    } catch (emailError) {
+      console.error(
+        "❌ Welcome email failed:",
+        emailError.message
+      );
+    }
   }
 
   // ============================================

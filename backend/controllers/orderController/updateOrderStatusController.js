@@ -4,6 +4,7 @@ import Order from "../../models/orderModel.js";
 import Product from "../../models/productModel.js";
 import User from "../../models/userModel.js";
 import { sendEmail } from "../../utils/sendEmail.js";
+import { addEmailJob } from "../../jobs/emailQueue.js";
 import { orderStatusEmailTemplate } from "../../utils/emailTemplates.js";
 
 // ==========================================
@@ -62,8 +63,7 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
   if (req.user.role === "seller") {
     const isSellerProductOwner = order.orderItems.some(
       (item) =>
-        item.seller &&
-        item.seller.toString() === req.user._id.toString(),
+        item.seller && item.seller.toString() === req.user._id.toString(),
     );
 
     if (!isSellerProductOwner) {
@@ -82,19 +82,13 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
 
   if (order.orderStatus === "Delivered") {
     return next(
-      new ErrorHandler(
-        "This order has already been marked as Delivered",
-        400,
-      ),
+      new ErrorHandler("This order has already been marked as Delivered", 400),
     );
   }
 
   if (order.orderStatus === "Cancelled") {
     return next(
-      new ErrorHandler(
-        "Cannot change status of a Cancelled order",
-        400,
-      ),
+      new ErrorHandler("Cannot change status of a Cancelled order", 400),
     );
   }
 
@@ -102,8 +96,7 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
   // 5. VALIDATE STATUS TRANSITION
   // ==========================================
 
-  const allowedNextStatuses =
-    VALID_STATUS_TRANSITIONS[order.orderStatus] || [];
+  const allowedNextStatuses = VALID_STATUS_TRANSITIONS[order.orderStatus] || [];
 
   if (!allowedNextStatuses.includes(status)) {
     return next(
@@ -134,9 +127,7 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
 
   order.statusHistory.push({
     status,
-    comment:
-      comment ||
-      `Order status updated to ${status} by ${req.user.role}`,
+    comment: comment || `Order status updated to ${status} by ${req.user.role}`,
     updatedAt: new Date(),
     updatedBy: req.user._id,
   });
@@ -197,34 +188,83 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
   // 12. SEND EMAIL TO CUSTOMER
   // ==========================================
 
+  // try {
+  //   const user = await User.findById(order.user);
+
+  //   if (user) {
+  //     await sendEmail({
+  //       email: user.email,
+  //       subject: `Order Status Updated - ${status}`,
+  //       html: orderStatusEmailTemplate(
+  //         user.name,
+  //         order,
+  //         status,
+  //         comment,
+  //       ),
+  //       message: `Your order ${order._id} status has been updated to ${status}.`,
+  //     });
+
+  //     console.log(
+  //       `📧 Order status email sent successfully to: ${user.email}`,
+  //     );
+  //   } else {
+  //     console.log(
+  //       `⚠️ Customer not found for order: ${order._id}`,
+  //     );
+  //   }
+  // } catch (emailError) {
+  //   // Email failure should NOT rollback order status
+  //   console.error(
+  //     "❌ Order Status Email Failed:",
+  //     emailError.message,
+  //   );
+  // }
+
+  // ==========================================
+  // 12. QUEUE EMAIL TO CUSTOMER
+  // POST-SAVE EXECUTION
+  // ==========================================
+
   try {
-    const user = await User.findById(order.user);
+    const user = await User.findById(order.user).select("name email");
 
     if (user) {
-      await sendEmail({
+      const emailData = {
         email: user.email,
-        subject: `Order Status Updated - ${status}`,
-        html: orderStatusEmailTemplate(
-          user.name,
-          order,
-          status,
-          comment,
-        ),
-        message: `Your order ${order._id} status has been updated to ${status}.`,
-      });
 
-      console.log(
-        `📧 Order status email sent successfully to: ${user.email}`,
-      );
+        subject: `Order Status Updated - ${status}`,
+
+        html: orderStatusEmailTemplate(user.name, order, status, comment),
+
+        message: `Your order ${order._id} status has been updated to ${status}.`,
+      };
+
+      try {
+        const job = await addEmailJob(emailData, {
+          jobId: `order-status-${order._id}-${status.toLowerCase()}`,
+        });
+
+        console.log(`📬 Order status email queued successfully: ${job.id}`);
+      } catch (queueError) {
+        console.error(
+          "⚠️ Status email queue unavailable. Trying direct email:",
+          queueError.message,
+        );
+
+        try {
+          await sendEmail(emailData);
+
+          console.log(`📧 Fallback status email sent to: ${user.email}`);
+        } catch (emailError) {
+          console.error("❌ Status email fallback failed:", emailError.message);
+        }
+      }
     } else {
-      console.log(
-        `⚠️ Customer not found for order: ${order._id}`,
-      );
+      console.log(`⚠️ Customer not found for order: ${order._id}`);
     }
   } catch (emailError) {
-    // Email failure should NOT rollback order status
     console.error(
-      "❌ Order Status Email Failed:",
+      "❌ Order status email processing error:",
       emailError.message,
     );
   }

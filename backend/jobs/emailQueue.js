@@ -35,6 +35,6 @@ export const emailQueue = new Queue("shopzy-email-queue", {
   },
 });
 
-export const addEmailJob = async (emailData) => {
-  return await emailQueue.add("send-order-email", emailData);
+export const addEmailJob = async (emailData, jobOptions = {}) => {
+  return await emailQueue.add("send-order-email", emailData, jobOptions);
 };

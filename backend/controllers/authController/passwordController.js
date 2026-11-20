@@ -1,11 +1,131 @@
+// {
+  
+
+// import crypto from "crypto";
+// import asyncHandler from "../../middlewares/asyncHandler.js";
+// import ErrorHandler from "../../utils/ErrorHandlers.js";
+// import User from "../../models/userModel.js";
+// import { sendEmail } from "../../utils/sendEmail.js";
+// import { sendToken } from "../../utils/sendToken.js";
+// import {
+//   forgotPasswordTemplate,
+//   passwordChangedTemplate,
+// } from "../../utils/emailTemplates.js";
+
+// // @desc    Forgot Password - Send Reset Email
+// // @route   POST /api/v1/auth/password/forgot
+// // @access  Public
+// export const forgotPassword = asyncHandler(async (req, res, next) => {
+//   const { email } = req.body;
+
+//   const user = await User.findOne({ email });
+
+//   if (!user) {
+//     return next(new ErrorHandler("User not found with this email", 404));
+//   }
+
+//   // Check if Google-only user
+//   if (user.provider === "google" && !user.password) {
+//     return next(
+//       new ErrorHandler(
+//         "Google authenticated users cannot reset password. Please login via Google.",
+//         400,
+//       ),
+//     );
+//   }
+
+//   // Get Reset Token from Model Method
+//   const resetToken = user.getResetPasswordToken();
+
+//   await user.save({ validateBeforeSave: false });
+
+//   // Frontend Reset Link Construct
+//   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+//   const resetPasswordUrl = `${frontendUrl}/password/reset/${resetToken}`;
+
+//   try {
+//     await sendEmail({
+//       email: user.email,
+//       subject: "NexusCart AI - Password Recovery 🔐",
+//       html: forgotPasswordTemplate(resetPasswordUrl, user.name),
+//       message: `Your password reset URL is: ${resetPasswordUrl}. Valid for 15 minutes.`,
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: `Password reset link sent successfully to ${user.email}`,
+//     });
+//   } catch (error) {
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpire = undefined;
+
+//     await user.save({ validateBeforeSave: false });
+
+//     return next(
+//       new ErrorHandler("Email could not be sent. Please try again later.", 500),
+//     );
+//   }
+// });
+
+// // @desc    Reset Password using Token
+// // @route   PUT /api/v1/auth/password/reset/:token
+// // @access  Public
+// export const resetPassword = asyncHandler(async (req, res, next) => {
+//   const resetPasswordToken = crypto
+//     .createHash("sha256")
+//     .update(req.params.token)
+//     .digest("hex");
+
+//   const user = await User.findOne({
+//     resetPasswordToken,
+//     resetPasswordExpire: { $gt: Date.now() },
+//   });
+
+//   if (!user) {
+//     return next(
+//       new ErrorHandler("Password reset token is invalid or has expired", 400),
+//     );
+//   }
+
+//   // Set new password
+//   user.password = req.body.password;
+//   user.resetPasswordToken = undefined;
+//   user.resetPasswordExpire = undefined;
+
+//   await user.save();
+
+//   // 📧 Send Security Alert Email using template
+//   try {
+//     await sendEmail({
+//       email: user.email,
+//       subject: "NexusCart AI - Security Alert: Password Updated 🔒",
+//       html: passwordChangedTemplate(user.name),
+//       message:
+//         "Your NexusCart AI account password has been updated successfully.",
+//     });
+//   } catch (emailError) {
+//     console.error(
+//       "Password change notification email failed:",
+//       emailError.message,
+//     );
+//   }
+
+//   sendToken(user, 200, res);
+// });
+
+// }
 
 
 import crypto from "crypto";
+
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import ErrorHandler from "../../utils/ErrorHandlers.js";
 import User from "../../models/userModel.js";
+
 import { sendEmail } from "../../utils/sendEmail.js";
+import { addEmailJob } from "../../jobs/emailQueue.js";
 import { sendToken } from "../../utils/sendToken.js";
+
 import {
   forgotPasswordTemplate,
   passwordChangedTemplate,
@@ -14,13 +134,16 @@ import {
 // @desc    Forgot Password - Send Reset Email
 // @route   POST /api/v1/auth/password/forgot
 // @access  Public
+
 export const forgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
 
   const user = await User.findOne({ email });
 
   if (!user) {
-    return next(new ErrorHandler("User not found with this email", 404));
+    return next(
+      new ErrorHandler("User not found with this email", 404)
+    );
   }
 
   // Check if Google-only user
@@ -28,8 +151,8 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
     return next(
       new ErrorHandler(
         "Google authenticated users cannot reset password. Please login via Google.",
-        400,
-      ),
+        400
+      )
     );
   }
 
@@ -39,36 +162,61 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // Frontend Reset Link Construct
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const frontendUrl =
+    process.env.FRONTEND_URL || "http://localhost:5173";
+
   const resetPasswordUrl = `${frontendUrl}/password/reset/${resetToken}`;
 
-  try {
-    await sendEmail({
-      email: user.email,
-      subject: "NexusCart AI - Password Recovery 🔐",
-      html: forgotPasswordTemplate(resetPasswordUrl, user.name),
-      message: `Your password reset URL is: ${resetPasswordUrl}. Valid for 15 minutes.`,
-    });
+  const emailData = {
+    email: user.email,
+    subject: "NexusCart AI - Password Recovery 🔐",
+    html: forgotPasswordTemplate(resetPasswordUrl, user.name),
+    message: `Your password reset URL is: ${resetPasswordUrl}. Valid for 15 minutes.`,
+  };
 
-    res.status(200).json({
+  try {
+    try {
+      const job = await addEmailJob(emailData, {
+        jobId: `forgot-password-${user._id}-${Date.now()}`,
+      });
+
+      console.log("📬 Password reset email queued:", job.id);
+    } catch (queueError) {
+      console.error(
+        "⚠️ Password reset queue unavailable. Trying direct email:",
+        queueError.message
+      );
+
+      await sendEmail(emailData);
+
+      console.log("📧 Password reset fallback email sent");
+    }
+
+    return res.status(200).json({
       success: true,
       message: `Password reset link sent successfully to ${user.email}`,
     });
   } catch (error) {
+    // Clear reset token if both queue and direct email fail
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
     await user.save({ validateBeforeSave: false });
 
     return next(
-      new ErrorHandler("Email could not be sent. Please try again later.", 500),
+      new ErrorHandler(
+        "Email could not be sent. Please try again later.",
+        500
+      )
     );
   }
 });
 
+
 // @desc    Reset Password using Token
 // @route   PUT /api/v1/auth/password/reset/:token
 // @access  Public
+
 export const resetPassword = asyncHandler(async (req, res, next) => {
   const resetPasswordToken = crypto
     .createHash("sha256")
@@ -82,7 +230,10 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
 
   if (!user) {
     return next(
-      new ErrorHandler("Password reset token is invalid or has expired", 400),
+      new ErrorHandler(
+        "Password reset token is invalid or has expired",
+        400
+      )
     );
   }
 
@@ -93,21 +244,42 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
 
   await user.save();
 
-  // 📧 Send Security Alert Email using template
+  // ============================================
+  // PASSWORD CHANGED SECURITY EMAIL
+  // ============================================
+
+  const emailData = {
+    email: user.email,
+    subject: "NexusCart AI - Security Alert: Password Updated 🔒",
+    html: passwordChangedTemplate(user.name),
+    message:
+      "Your NexusCart AI account password has been updated successfully.",
+  };
+
   try {
-    await sendEmail({
-      email: user.email,
-      subject: "NexusCart AI - Security Alert: Password Updated 🔒",
-      html: passwordChangedTemplate(user.name),
-      message:
-        "Your NexusCart AI account password has been updated successfully.",
+    const job = await addEmailJob(emailData, {
+      jobId: `password-changed-${user._id}-${Date.now()}`,
     });
-  } catch (emailError) {
+
+    console.log("📬 Password changed email queued:", job.id);
+  } catch (queueError) {
     console.error(
-      "Password change notification email failed:",
-      emailError.message,
+      "⚠️ Password changed email queue unavailable. Trying direct email:",
+      queueError.message
     );
+
+    try {
+      await sendEmail(emailData);
+
+      console.log("📧 Password changed fallback email sent");
+    } catch (emailError) {
+      console.error(
+        "❌ Password change notification email failed:",
+        emailError.message
+      );
+    }
   }
 
+  // Send token after successful password reset
   sendToken(user, 200, res);
 });
