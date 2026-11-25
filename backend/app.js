@@ -21,7 +21,7 @@ import wishlistRoutes from "./routes/wishlistRoutes.js";
 import errorMiddleware from "./middlewares/error.js";
 
 const app = express();
-
+app.set("trust proxy", 1);
 // ==============================
 // CORS
 // ==============================
